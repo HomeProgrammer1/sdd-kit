@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Spec-driven development for Claude Code: delivery workflow, feature diagrams, design-system prototypes and Figma layout",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {
       "name": "sdd-kit",
       "source": "./plugins/sdd-kit",
-      "version": "0.2.0",
-      "description": "Spec-driven delivery for any software project (web, mobile, backend): discovery, spec with How-it-works diagrams, plan, TDD implementation with two-verdict review, verification and a draft PR, behind three human gates.",
+      "version": "0.3.0",
+      "description": "Spec-driven delivery for any software project (web, mobile, backend): discovery, spec with How-it-works diagrams, plan, TDD implementation with two-verdict review, verification and a draft PR, behind three human gates, plus a quick lane for small fixes.",
       "category": "development",
       "keywords": [
         "sdd",
@@ -38,7 +38,7 @@
     {
       "name": "sdd-design",
       "source": "./plugins/sdd-design",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Clickable prototypes from an approved spec, built only from your own design system, plus a starter for a separate design-system repository.",
       "category": "design",
       "keywords": [
@@ -51,7 +51,7 @@
     {
       "name": "sdd-figma",
       "source": "./plugins/sdd-figma",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Lays out a feature's diagrams and prototype screens in Figma as auto-layout frames bound to design-system variables, through the Figma MCP connector or a bundled Figma plugin.",
       "category": "design",
       "keywords": [

@@ -10,13 +10,15 @@ Reads   <feature>/diagrams/manifest.json (+ the SVGs it lists)
         <feature>/design/screens.json (optional)
         the design system: --ds, else the "Design system: <components.json>" line
         of the nearest CLAUDE.md above the feature folder
-Writes  <feature>/figma/bundle.json (or --out)
+Writes  <feature>/figma/bundle.json (or --out), with "sources": the sha1 of spec.md,
+        design/screens.json and each diagram's Mermaid source, so Figma can show what it was built from
 
 Exit 0 = written, 1 = nothing to export (no diagrams and no screens), 2 = usage error.
 Standard library only.
 """
 import argparse
 import datetime
+import hashlib
 import json
 import math
 import re
@@ -30,7 +32,7 @@ NEUTRAL = {
     "color.danger": "#c62828", "color.danger-subtle": "#fdecec",
     "color.success": "#1b7a3a", "color.success-subtle": "#e8f5ec",
     "color.warning": "#8a5a00", "color.warning-subtle": "#fdf4e3",
-    "color.info": "#1d5fbf", "color.info-subtle": "#e9f1fc",
+    "color.info": "#1d5fbf", "color.info-subtle": "#e9f1fc", "color.overlay": "#18181d80",
     **{f"space.{n}": 4 * n for n in (1, 2, 3, 4, 5, 6, 8, 10, 12)},
     "radius.sm": 4, "radius.md": 8, "radius.lg": 16, "radius.full": 999,
     "font.family.sans": "Inter, system-ui, sans-serif",
@@ -38,18 +40,24 @@ NEUTRAL = {
     "font.size.heading": 20, "font.size.title": 28, "font.size.display": 40,
     "font.weight.regular": 400, "font.weight.medium": 500, "font.weight.bold": 700,
 }
-EXPECTED = [k for k in NEUTRAL if not k.endswith("-subtle") and k not in ("radius.full", "font.size.label")]
+EXPECTED = [k for k in NEUTRAL if not k.endswith("-subtle") and k not in ("radius.full", "font.size.label", "color.overlay")]
 
 # Built-in node types (screens-schema.md) and the prop that carries their variant.
 BUILTIN = {"Stack", "Grid", "Card", "Text", "Button", "Link", "TextField", "Checkbox", "Toggle", "Select",
-           "Alert", "Badge", "Image", "Avatar", "List", "NavBar", "TabBar", "Sidebar", "Divider", "Spacer"}
+           "Alert", "Badge", "Image", "Avatar", "List", "NavBar", "TabBar", "Sidebar", "Divider", "Spacer",
+           "Table", "Modal", "Tabs", "Pagination", "Progress", "Chart"}
 BUILTIN_VARIANTS = {
     "Text": ["display", "title", "heading", "body", "caption", "label"],
     "Button": ["primary", "secondary", "ghost", "danger"],
     "Alert": ["info", "success", "warning", "danger"],
+    "Chart": ["line", "bar", "pie"],
 }
-VARIANT_PROP = {"Alert": "tone", "Badge": "tone"}
+VARIANT_PROP = {"Alert": "tone", "Badge": "tone", "Chart": "kind"}
 INPUT_TYPES = {"text", "email", "password"}
+
+
+def sha1_of(data):
+    return hashlib.sha1(data).hexdigest()
 
 
 def load_json(path, warnings, what):
@@ -210,8 +218,12 @@ def read_diagrams(feature_dir, warnings, keep_markers):
                 svg, _ = inline_markers(svg)
             except (ValueError, IndexError, KeyError) as e:
                 warnings.append(f"diagram '{d.get('title')}': arrowheads left as <marker> ({e})")
+        mmd = src.with_suffix(".mmd")
+        source = None
+        if mmd.is_file():   # full sha1 of the Mermaid source; sdd-diagrams' 12-character sha1 is its prefix
+            source = {"path": f"diagrams/{mmd.name}", "sha1": sha1_of(mmd.read_text(encoding="utf-8").strip().encode("utf-8"))}
         out.append({"title": d.get("title") or d.get("name") or src.stem, "kind": d.get("kind") or "diagram",
-                    "name": d.get("name") or src.stem, "sha1": d.get("sha1") or "", "svg": svg})
+                    "name": d.get("name") or src.stem, "sha1": d.get("sha1") or "", "svg": svg, "source": source})
     for s in manifest.get("skipped") or []:
         warnings.append(f"diagram skipped by sdd-diagrams: {s if isinstance(s, str) else json.dumps(s)}")
     return manifest, out
@@ -376,9 +388,13 @@ def validate_screens(screens, comps, warnings):
                 warnings.append(f"screen {sid}: {t} variant '{value}' not in {variants}")
         if t == "TextField" and node.get("inputType", "text") not in INPUT_TYPES:
             warnings.append(f"screen {sid}: TextField inputType '{node.get('inputType')}' is not text|email|password")
-        if node.get("link") and node["link"] not in idset:
-            warnings.append(f"screen {sid}: {t} links to unknown screen '{node['link']}'")
-        for c in node.get("children") or []:
+        def listed(key):
+            return node.get(key) if isinstance(node.get(key), list) else []
+        links = [node.get("link")] + [i.get("link") for i in listed("items") if t == "Tabs" and isinstance(i, dict)]
+        for link in links:
+            if link and link not in idset:
+                warnings.append(f"screen {sid}: {t} links to unknown screen '{link}'")
+        for c in listed("children") + listed("actions"):
             walk(c, sid)
 
     for s in items:
@@ -445,14 +461,28 @@ def main(argv=None):
 
     feature = (screens or {}).get("feature") or (manifest or {}).get("feature") or feature_dir.name
     title = (screens or {}).get("title")
-    if not title and (feature_dir / "spec.md").is_file():
-        m = re.search(r"^#\s+(.+)$", (feature_dir / "spec.md").read_text(encoding="utf-8"), re.M)
+    spec = feature_dir / "spec.md"
+    spec_sha1 = sha1_of(spec.read_bytes()) if spec.is_file() else None
+    if not title and spec_sha1:
+        m = re.search(r"^#\s+(.+)$", spec.read_text(encoding="utf-8"), re.M)
         title = m.group(1).strip() if m else None
+    built_from = (screens or {}).get("spec_sha1")
+    if built_from and spec_sha1 and built_from != spec_sha1:
+        warnings.append("screens.json was built from an older spec.md; re-run the prototype "
+                        f"(spec_sha1 {str(built_from)[:7]}, spec.md is now {spec_sha1[:7]})")
+    sources = {
+        "spec": {"path": "spec.md", "sha1": spec_sha1} if spec_sha1 else None,
+        "screens": {"path": "design/screens.json", "sha1": sha1_of(spath.read_bytes())} if screens is not None else None,
+        "diagrams": [dict(d["source"], name=d["name"]) for d in diagrams if d.get("source")],
+    }
+    for d in diagrams:
+        d.pop("source", None)
     bundle = {
         "version": 1,
         "feature": feature,
         "title": title or feature,
         "generatedAt": datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "sources": sources,
         "designSystem": ds_meta,
         "tokens": tokens,
         "diagrams": diagrams,

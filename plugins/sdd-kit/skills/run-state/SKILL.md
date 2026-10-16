@@ -14,6 +14,7 @@ The orchestrator writes `state.json` Write it **before** reporting to the human 
   "slug": "password-reset",
   "profile": ["web", "backend"],
   "autonomy": "spec",
+  "lane": "full",
   "phase": "discovery",
   "session": "<session id of the session running /sdd-kit:sdd>",
   "branch": "feat/F-001-password-reset",
@@ -36,7 +37,8 @@ The orchestrator writes `state.json` Write it **before** reporting to the human 
 - `approvals.*`: `{ "by": "<name>", "at": "<ISO time>", "how": "/sdd-kit:sdd F-001 | message" }`.
 - `pause`: `{ "reason": "...", "needs": "what the human must do", "at": "..." }`; cleared on resume.
 - `autonomy` is set once from the user and never raised by the run.
-- `session` is overwritten with the current session id on start and on every resume; the guard hook uses it to tell an SDD session from any other. A run in `done` or `abandoned` no longer counts.
+- `lane`: `full` (default) or `quick` (`--quick`). A quick run may switch to `full`, never back.
+- `session` is overwritten with the current session id on start and on every resume; the guard hook uses it to tell an SDD session from any other. A run in `done` or `abandoned` no longer counts. While an open run has no usable `session` (missing, or the `${CLAUDE_SESSION_ID}` placeholder written literally), the guard applies its rails to every session in the project, so close runs you stop working on (`phase: abandoned`).
 - On resume: re-read, verify each side effect still exists (`git log`, `git branch`), then continue from `phase`.
 
 ## ledger.md

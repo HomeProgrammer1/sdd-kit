@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /*
- * Tests for plugins/sdd-figma: build_bundle.py on the EXAMPLE-001 feature, then
- * figma-plugin/code.js inside a strict mock of the Figma Plugin API.
+ * Tests for plugins/sdd-figma: build_bundle.py on the EXAMPLE-001 feature and the
+ * dashboard example, then figma-plugin/code.js inside a strict mock of the Figma
+ * Plugin API, then the spec drift warnings of render_prototype.py and build_bundle.py.
  * Node built-ins only. Run: node scripts/test_figma_plugin.js   (exit 1 on failure)
+ * The mock is ours; scripts/typecheck_figma.sh checks code.js against Figma's own typings.
  */
 "use strict";
+const crypto = require("crypto");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -17,7 +20,10 @@ const BUILD = path.join(REPO, "plugins/sdd-figma/skills/figma-export/scripts/bui
 const DIAGRAMS = path.join(REPO, "plugins/sdd-diagrams/skills/feature-diagrams/scripts/sdd_diagrams.py");
 const SPEC = path.join(REPO, "plugins/sdd-kit/skills/init-project/template/specs/EXAMPLE-001-password-reset/spec.md");
 const SCREENS = path.join(REPO, "plugins/sdd-design/skills/prototype/references/example.screens.json");
+const DASHBOARD = path.join(REPO, "plugins/sdd-design/skills/prototype/references/example.dashboard.screens.json");
 const DS = path.join(REPO, "plugins/sdd-design/skills/design-system-init/starter/components.json");
+const RENDER = path.join(REPO, "plugins/sdd-design/skills/prototype/scripts/render_prototype.py");
+const sha1 = (buf) => crypto.createHash("sha1").update(buf).digest("hex");
 
 let failed = 0, passed = 0;
 function check(name, ok, detail) {
@@ -36,7 +42,7 @@ function createMock(opts) {
   opts = opts || {};
   let seq = 0;
   const nodes = new Map();
-  const log = { reactions: [], bound: [], paintBound: 0, ui: [], notify: [], closed: false, svg: 0, showUI: null };
+  const log = { reactions: [], bound: [], paintBound: 0, ui: [], notify: [], closed: false, svg: 0, showUI: null, removed: 0 };
   const avail = opts.fonts || [
     ["Inter", "Regular"], ["Inter", "Medium"], ["Inter", "Semi Bold"], ["Inter", "Bold"],
     ["Roboto", "Regular"], ["Roboto", "Medium"], ["Roboto", "Bold"]
@@ -48,6 +54,7 @@ function createMock(opts) {
     "topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius", "strokeWeight", "minWidth", "maxWidth",
     "minHeight", "maxHeight", "counterAxisSpacing", "opacity", "visible", "characters"]);
   const isAuto = (n) => !!n && (n.type === "FRAME" || n.type === "COMPONENT" || n.type === "INSTANCE") && !!n.layoutMode && n.layoutMode !== "NONE";
+  const CONSTRAINT = ["MIN", "CENTER", "MAX", "STRETCH", "SCALE"];
   let allLoaded = false;
   let current = null;
   const pages = [];
@@ -72,12 +79,25 @@ function createMock(opts) {
     remove() {
       if (this.parent) { const kids = this.parent._kids; const i = kids.indexOf(this); if (i >= 0) kids.splice(i, 1); }
       this.parent = null;
+      log.removed++;
       const kill = (n) => { n.removed = true; (n._kids || []).forEach(kill); };
       kill(this);
+    }
+    get layoutPositioning() { return this._pos || "AUTO"; }
+    set layoutPositioning(v) {
+      if (v !== "AUTO" && v !== "ABSOLUTE") throw new Error("layoutPositioning: invalid value " + v);
+      if (v === "ABSOLUTE" && !isAuto(this.parent)) throw new Error("layoutPositioning ABSOLUTE on '" + this.name + "': parent is not an auto-layout frame");
+      this._pos = v;
+    }
+    get constraints() { return this._con || { horizontal: "MIN", vertical: "MIN" }; }
+    set constraints(c) {
+      if (!c || CONSTRAINT.indexOf(c.horizontal) < 0 || CONSTRAINT.indexOf(c.vertical) < 0) throw new Error("constraints: invalid value " + JSON.stringify(c));
+      this._con = { horizontal: c.horizontal, vertical: c.vertical };
     }
     _sizing(axis, v) {
       if (["FIXED", "HUG", "FILL"].indexOf(v) < 0) throw new Error("layoutSizing" + axis + ": invalid value " + v);
       if (v !== "FIXED" && !isAuto(this.parent)) throw new Error("layoutSizing" + axis + " = " + v + " on '" + this.name + "': parent is not an auto-layout frame");
+      if (v === "FILL" && this._pos === "ABSOLUTE") throw new Error("FILL is not valid on an absolutely positioned child ('" + this.name + "')");
       if (v === "HUG" && !(this.type === "TEXT" || isAuto(this))) throw new Error("HUG is only valid on auto-layout frames and text ('" + this.name + "')");
       this["_ls" + axis] = v;
     }
@@ -116,6 +136,8 @@ function createMock(opts) {
     appendChild(c) {
       if (!(c instanceof Node)) throw new Error("appendChild: not a node");
       if (c === this) throw new Error("appendChild: cycle");
+      if (c.type === "SECTION" && this.type !== "PAGE" && this.type !== "SECTION") throw new Error("A section can only be placed on a page or in another section");
+      if (c.type === "PAGE") throw new Error("appendChild: a page cannot be a child");
       if (c.parent) { const k = c.parent._kids; k.splice(k.indexOf(c), 1); }
       this._kids.push(c); c.parent = this;
     }
@@ -141,6 +163,38 @@ function createMock(opts) {
       if (!isAuto(this) && !isAuto(this.parent)) throw new Error("minHeight needs auto layout");
       this._minH = v;
     }
+    resizeWithoutConstraints(w, h) { Node.prototype.resize.call(this, w, h); }
+  }
+
+  // Sections: children keep coordinates relative to the section; no auto layout, no resize constraints.
+  class Section extends Container {
+    constructor() { super("SECTION"); this.fills = []; this.sectionContentsHidden = false; }
+    resize(w, h) { this.resizeWithoutConstraints(w, h); }
+    resizeWithoutConstraints(w, h) { Node.prototype.resize.call(this, w, h); }
+  }
+
+  class Ellipse extends Node {
+    constructor() { super("ELLIPSE"); this._arc = { startingAngle: 0, endingAngle: 2 * Math.PI, innerRadius: 0 }; }
+    get arcData() { return this._arc; }
+    set arcData(a) {
+      if (!a || ["startingAngle", "endingAngle", "innerRadius"].some((k) => typeof a[k] !== "number" || !isFinite(a[k])) || a.innerRadius < 0 || a.innerRadius > 1) {
+        throw new Error("arcData: expected { startingAngle, endingAngle, innerRadius 0..1 }");
+      }
+      this._arc = { startingAngle: a.startingAngle, endingAngle: a.endingAngle, innerRadius: a.innerRadius };
+    }
+  }
+
+  class Vector extends Node {
+    constructor() { super("VECTOR"); this._paths = []; this.strokeWeight = 1; this.strokeJoin = "MITER"; }
+    get vectorPaths() { return this._paths; }
+    set vectorPaths(v) {
+      if (!Array.isArray(v) || v.some((p) => !p || ["NONZERO", "EVENODD", "NONE"].indexOf(p.windingRule) < 0 || typeof p.data !== "string" || !/^\s*M/.test(p.data))) {
+        throw new Error("vectorPaths: expected [{ windingRule, data: 'M …' }]");
+      }
+      this._paths = v.slice();
+    }
+    get vectorNetwork() { return {}; }
+    set vectorNetwork(v) { throw new Error("vectorNetwork is read-only with documentAccess: dynamic-page; use setVectorNetworkAsync"); }
   }
 
   class Text extends Node {
@@ -188,6 +242,10 @@ function createMock(opts) {
       return this._kids.slice();
     }
     async loadAsync() { this._loaded = true; }
+    appendChild(c) {
+      if (!this._loaded && !allLoaded && current !== this) throw new Error("Page '" + this.name + "' is not loaded; call loadAsync()");
+      super.appendChild(c);
+    }
     get flowStartingPoints() { return this._flow; }
     set flowStartingPoints(v) {
       for (const p of v) {
@@ -297,7 +355,9 @@ function createMock(opts) {
     createFrame() { return onPage(new Frame()); },
     createText() { return onPage(new Text()); },
     createRectangle() { return onPage(new Node("RECTANGLE")); },
-    createEllipse() { return onPage(new Node("ELLIPSE")); },
+    createEllipse() { return onPage(new Ellipse()); },
+    createVector() { return onPage(new Vector()); },
+    createSection() { return onPage(new Section()); },
     createNodeFromSvg(svg) {
       if (typeof svg !== "string" || !/^\s*<svg[\s>]/.test(svg) || !/<\/svg>\s*$/.test(svg)) throw new Error("Failed to parse SVG");
       const f = new Frame();
@@ -342,6 +402,7 @@ async function runBuild(mock, bundle) {
 }
 
 const role = (n, r) => n.getPluginData("sdd") === "generated" && n.getPluginData("sddRole") === r;
+const isGen = (n) => n.getPluginData("sdd") === "generated";
 const pageNamed = (mock, name) => mock.pages.filter((p) => p.name === name);
 const allIn = (node) => node.findAll ? node.findAll(() => true) : [];
 
@@ -356,6 +417,7 @@ async function main() {
     let r = py([DIAGRAMS, "build", SPEC, "--out", path.join(feat, "diagrams")]);
     check("sdd_diagrams build exits 0", r.code === 0, r.out.slice(-300));
     fs.copyFileSync(SCREENS, path.join(feat, "design", "screens.json"));
+    fs.copyFileSync(SPEC, path.join(feat, "spec.md"));
     r = py([BUILD, feat, "--ds", DS]);
     check("build_bundle exits 0", r.code === 0, r.out.slice(-400));
     check("build_bundle prints a one-line summary", /\[OK\] EXAMPLE-001: 3 diagram\(s\), 5 screen\(s\)/.test(r.out), r.out.trim().split("\n").pop());
@@ -369,6 +431,13 @@ async function main() {
       bundle.tokens["font.family.sans"] === "Inter, system-ui, sans-serif", JSON.stringify(bundle.tokens["color.primary"]));
     check("designSystem metadata", bundle.designSystem && bundle.designSystem.name === "my-design-system" && bundle.designSystem.version === "0.1.0");
     check("no validation warnings on the example", bundle.warnings.length === 0, bundle.warnings.join(" | "));
+    const src = bundle.sources || {};
+    const manifest1 = JSON.parse(fs.readFileSync(path.join(feat, "diagrams", "manifest.json"), "utf8"));
+    check("sources: sha1 of spec.md and screens.json", src.spec && src.spec.sha1 === sha1(fs.readFileSync(path.join(feat, "spec.md"))) &&
+      src.screens && src.screens.sha1 === sha1(fs.readFileSync(path.join(feat, "design", "screens.json"))), JSON.stringify(src).slice(0, 200));
+    check("sources: one full sha1 per diagram source, prefixed by the manifest's sha1", Array.isArray(src.diagrams) && src.diagrams.length === 3 &&
+      src.diagrams.every((d, i) => /^[0-9a-f]{40}$/.test(d.sha1) && d.sha1.indexOf(manifest1.diagrams[i].sha1) === 0 && d.path === "diagrams/" + d.name + ".mmd"),
+      JSON.stringify(src.diagrams));
 
     const proj = path.join(tmp, "proj");
     const feat2 = path.join(proj, "specs", "EXAMPLE-001");
@@ -447,10 +516,25 @@ async function main() {
     check("plugin stays open and notifies", !mock.log.closed && mock.log.notify.some((t) => t.indexOf("EXAMPLE-001") === 0));
     check("report counts drawn components", report.drawn && report.drawn.Button === 6 && report.drawn.Text === 8 && report.drawn.TextField === 3 && Object.keys(report.instanced).length === 0, JSON.stringify(report.drawn));
     check("clean example builds without warnings", report.warnings.length === 0, (report.warnings || []).join(" | "));
+    const sha7 = src.spec.sha1.slice(0, 7);
+    const caps = [dPage, sPage].map((p) => p.children.filter((n) => role(n, "caption")));
+    check("each generated page has a 'Generated from spec <sha7> · <date>' caption above its content", caps.every((c, i) => c.length === 1 &&
+      new RegExp("^Generated from spec " + sha7 + " · \\d{4}-\\d{2}-\\d{2}$").test(c[0].characters) && c[0].y + c[0].height < 0 &&
+      [dPage, sPage][i].children.every((n) => n === c[0] || n.y >= 0)), caps.map((c) => c[0] && c[0].characters).join(" | "));
+    check("pages carry the bundle's sources in pluginData", [dPage, sPage].every((p) => p.getPluginData("sddSources") === JSON.stringify(bundle.sources) &&
+      p.getPluginData("sddSpecSha1") === src.spec.sha1) && report.specSha1 === src.spec.sha1);
+    check("first run archives nothing", report.archived.layers === 0 && pageNamed(mock, "EXAMPLE-001 · Archive").length === 0, JSON.stringify(report.archived));
 
     const counts1 = [dPage, sPage].map((p) => p.children.length);
     const varCount1 = mock.variables.size;
+    const run1 = { [dName]: dPage.children.slice(), [sName]: sPage.children.slice() };
+    const run1All = run1[dName].concat(run1[sName]);
+    const offsets = (list) => list.map((n) => (n.x - list[0].x) + "," + (n.y - list[0].y)).join(" ");
+    const layout1 = [offsets(run1[dName]), offsets(run1[sName])];
     sPage.appendChild(Object.assign(mock.figma.createRectangle(), { name: "Designer note" }));
+    screens[0].appendChild(Object.assign(mock.figma.createRectangle(), { name: "Designer tweak" }));
+    screens[1].name = "check-inbox — renamed by a designer";
+    const removed1 = mock.log.removed, ui1 = mock.log.ui.length;
     res = await runBuild(mock, bundle);
     check("run 2 finished without error", res.type === "done", res.text);
     dPages = pageNamed(mock, dName); sPages = pageNamed(mock, sName);
@@ -463,6 +547,45 @@ async function main() {
     const live = new Set(sPage.children.filter((n) => role(n, "screen")).map((f) => f.id));
     const live2 = mock.log.reactions.slice(-res.report.links).filter((x) => !x.node.removed && live.has(x.reactions[0].actions[0].destinationId));
     check("run 2: reactions point at the new frames", live2.length >= 5, live2.length);
+    const aName = "EXAMPLE-001 · Archive";
+    const aPages = pageNamed(mock, aName);
+    check("run 2: deletes nothing", mock.log.removed === removed1 && run1All.every((n) => !n.removed), mock.log.removed - removed1);
+    check("run 2: archive page created once and marked sdd=archive (not generated)", aPages.length === 1 &&
+      aPages[0].getPluginData("sdd") === "archive" && mock.pages.indexOf(aPages[0]) > mock.pages.indexOf(sPage));
+    const aPage = aPages[0];
+    const runs = aPage ? aPage.children : [];
+    const runRe = /^Run \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+    check("run 2: one 'Run <ISO date-time>' section holding one section per source page", runs.length === 1 && runs[0].type === "SECTION" &&
+      runRe.test(runs[0].name) && runs[0].getPluginData("sdd") === "archive" &&
+      runs[0].children.map((c) => c.type + ":" + c.name).join() === "SECTION:" + dName + ",SECTION:" + sName, runs.map((r) => r.name).join());
+    const groups = runs.length ? runs[0].children : [];
+    check("run 2: every earlier generated layer moved there, re-marked sdd=archived", groups.length === 2 &&
+      [dName, sName].every((pn, i) => run1[pn].length === groups[i].children.length && run1[pn].every((n) => n.parent === groups[i] &&
+        n.getPluginData("sdd") === "archived" && n.getPluginData("sddArchivedFrom") === pn && n.getPluginData("sddArchivedAt") + "" !== "")));
+    check("run 2: archived layers keep their relative layout and fit their section", groups.length === 2 &&
+      groups.every((g) => g.children.every((n) => n.x >= 0 && n.y >= 0 && n.x + n.width <= g.width && n.y + n.height <= g.height)) &&
+      groups[1].x >= groups[0].x + groups[0].width && runs[0].width >= groups[1].x + groups[1].width &&
+      offsets(run1[dName]) === layout1[0] && offsets(run1[sName]) === layout1[1], offsets(run1[sName]) + " vs " + layout1[1]);
+    check("run 2: designer edits survive on the archive page", screens[0].children.some((n) => n.name === "Designer tweak") &&
+      screens[1].name === "check-inbox — renamed by a designer" && allIn(aPage).indexOf(screens[0]) >= 0);
+    check("run 2: generated pages hold only new layers", [dPage, sPage].every((p) => p.children.filter((n) => n.getPluginData("sdd") === "generated")
+      .every((n) => run1All.indexOf(n) < 0)) && !isGen(aPage) && allIn(aPage).every((n) => n.getPluginData("sdd") !== "generated"));
+    const ar = res.report.archived || {};
+    check("run 2: report says how many layers were archived and where", ar.layers === run1All.length && ar.page === aName && ar.run === runs[0].name &&
+      res.report.summary.indexOf(run1All.length + " earlier layer(s) archived to “" + aName + "” › " + runs[0].name) >= 0, res.report.summary);
+    const logs2 = mock.log.ui.slice(ui1).filter((m) => m.type === "log").map((m) => m.text);
+    check("run 2: the UI log names the archive for each page", [dName, sName].every((pn) => logs2.some((t) => t.indexOf("page “" + pn + "”; archived its " +
+      run1[pn].length + " earlier generated layer(s) to “" + aName + "” › " + runs[0].name) >= 0)), logs2.join(" | "));
+
+    // Another re-run: its Run section goes below the first one, which stays as it was
+    const run2All = [dPage, sPage].reduce((a, p) => a.concat(p.children.filter(isGen)), []);
+    const firstRun = runs[0], firstBox = { y: firstRun.y, h: firstRun.height, n: allIn(firstRun).length };
+    res = await runBuild(mock, bundle);
+    const runs3 = aPage.children;
+    check("re-run: second Run section below the first, first unchanged", res.type === "done" && pageNamed(mock, aName).length === 1 &&
+      runs3.length === 2 && runs3[0] === firstRun && runs3[1].y >= firstBox.y + firstBox.h && allIn(firstRun).length === firstBox.n &&
+      run1All.every((n) => !n.removed && allIn(firstRun).indexOf(n) >= 0) && run2All.every((n) => allIn(runs3[1]).indexOf(n) >= 0),
+      runs3.map((r) => r.name + "@" + r.y).join());
 
     // Run 3: library keys (one importable, one missing) fall back without crashing
     const libBundle = JSON.parse(JSON.stringify(bundle));
@@ -495,6 +618,100 @@ async function main() {
     loadPlugin(mock5);
     res = await runBuild(mock5, bundle);
     check("run 5 falls back to the first available font", res.type === "done" && res.report.font === "Comic Neue", res.text);
+
+    // Run 6: the dashboard example exercises Table, Modal, Tabs, Pagination, Progress and Chart
+    console.log("dashboard example (new components)");
+    const dash = path.join(tmp, "DASH-1");
+    fs.mkdirSync(path.join(dash, "design"), { recursive: true });
+    fs.copyFileSync(DASHBOARD, path.join(dash, "design", "screens.json"));
+    r = py([BUILD, dash, "--ds", DS]);
+    const db = r.code === 0 ? JSON.parse(fs.readFileSync(path.join(dash, "figma", "bundle.json"), "utf8")) : null;
+    check("build_bundle accepts the dashboard (only the missing-diagrams warning)", db && db.screens.screens.length === 3 &&
+      db.warnings.length === 1 && db.warnings[0].indexOf("diagrams") >= 0 && db.sources.spec === null && db.sources.screens.sha1 === sha1(fs.readFileSync(DASHBOARD)),
+      db ? db.warnings.join(" | ") : r.out.slice(-300));
+    const mock7 = createMock();
+    loadPlugin(mock7);
+    res = await runBuild(mock7, db);
+    const r7 = res.report || {};
+    check("dashboard builds; its only warning is the bundle's", res.type === "done" && r7.warnings.length === 1 && r7.warnings[0].indexOf("bundle: ") === 0,
+      res.text || (r7.warnings || []).join(" | "));
+    check("new components are drawn, none as placeholders", r7.drawn && r7.drawn.Table === 2 && r7.drawn.Modal === 1 && r7.drawn.Tabs === 3 &&
+      r7.drawn.Pagination === 2 && r7.drawn.Progress === 2 && r7.drawn.Chart === 3 && !allIn(pageNamed(mock7, "EXAMPLE-002 · Screens")[0]).some((n) => /^Unknown/.test(n.name)),
+      JSON.stringify(r7.drawn));
+    const s7 = pageNamed(mock7, "EXAMPLE-002 · Screens")[0];
+    const f7 = s7.children.filter((n) => role(n, "screen"));
+    const frame7 = (id) => f7.find((f) => f.getPluginData("sddScreen") === id);
+    const all7 = allIn(s7), named = (re, under) => allIn(under || s7).filter((n) => re.test(n.name));
+    const varOf = (paint) => paint && paint.boundVariables ? Array.from(mock7.variables.values()).find((v) => v.id === paint.boundVariables.color.id) : null;
+    const table = named(/^Table \/ 5 columns$/, frame7("invoices"))[0];
+    const head = table && table.children[0];
+    check("Table: header + one frame per row, select column, sort markers, badge cells", table && table.children.length === 7 &&
+      head.name === "Header" && head.children[0].name === "Select" && head.children.length === 6 &&
+      named(/^Sort$/, head).length === 3 && named(/^Badge \/ danger$/, table.children[2]).length === 1 &&
+      table.children.slice(1).every((row) => row.layoutSizingHorizontal === "FILL" && row.children.slice(1).every((c) => c.layoutSizingHorizontal === "FILL")),
+      table && table.children.map((c) => c.name + ":" + c.children.length).join());
+    check("Table: selected row and header use semantic colour variables", table && varOf(table.children[2].fills[0]).name === "color/primary-subtle" &&
+      varOf(head.fills[0]).name === "color/surface-2" && named(/^Check$/, table.children[2]).length === 1 && named(/^Check$/, table.children[1]).length === 0);
+    const modal = all7.find((n) => /^Modal \//.test(n.name));
+    const confirmF = frame7("confirm-delete");
+    check("Modal: absolute scrim over the whole screen, stretched, overlay colour", modal && modal.parent === confirmF &&
+      modal.layoutPositioning === "ABSOLUTE" && modal.constraints.horizontal === "STRETCH" && modal.constraints.vertical === "STRETCH" &&
+      modal.width === confirmF.width && modal.height === confirmF.height && varOf(modal.fills[0]).name === "color/overlay" &&
+      confirmF.children[confirmF.children.length - 1] === modal, modal && modal.name);
+    const dialog = modal && modal.children[0];
+    const acts = dialog && dialog.children.find((n) => n.name === "Actions");
+    const toId = (n) => { const x = mock7.log.reactions.filter((e) => e.node === n).pop(); return x ? x.reactions[0].actions[0].destinationId : null; };
+    check("Modal: dialog with title, body and action buttons linked to their screens", dialog && dialog.name === "Dialog" &&
+      dialog.children[0].characters === "Delete invoice INV-1047?" && acts && acts.children.length === 2 &&
+      acts.children.every((b) => /^Button \//.test(b.name) && toId(b) === frame7("invoices").id) && dialog.width === 480);
+    const tabOn = named(/^Tab \/ Overview$/, frame7("overview"))[0], tabInv = named(/^Tab \/ Invoices$/, frame7("overview"))[0];
+    check("Tabs: active tab underlined in primary, other tabs link to their screens", tabOn && tabOn.strokeBottomWeight === 2 &&
+      varOf(tabOn.strokes[0]).name === "color/primary" && toId(tabInv) === frame7("invoices").id && toId(tabOn) === null &&
+      toId(named(/^Tab \/ Overview$/, frame7("invoices"))[0]) === frame7("overview").id);
+    const pg = named(/^Pagination \/ 2 of 8$/, frame7("invoices"))[0];
+    check("Pagination: previous, 1 2 3 … 8, next; current page filled", pg && pg.children.map((c) => c.type === "TEXT" ? c.characters : c.children[0].characters).join(" ") ===
+      "‹ Previous 1 2 3 … 8 Next ›" && varOf(pg.children[2].fills[0]).name === "color/primary" && pg.children[1].fills.length === 0,
+      pg && pg.children.map((c) => c.name).join());
+    const pr = named(/^Progress \/ Invoices sent/, frame7("overview"))[0];
+    const track = pr && pr.children.find((n) => n.name === "Track"), bar = track && track.children[0];
+    check("Progress: track fills its parent, bar is value % of it and scales with it", track && track.layoutSizingHorizontal === "FILL" && track.height === 8 &&
+      bar && bar.width === track.width * 0.72 && bar.constraints.horizontal === "SCALE" && varOf(bar.fills[0]).name === "color/primary" &&
+      pr.children[0].children.map((t) => t.characters).join("|") === "Invoices sent (720 of 1,000)|72%");
+    const plot = (kind) => { const c = named(new RegExp("^Chart / " + kind + "$"), frame7("overview"))[0]; return c && c.children.find((n) => n.name === "Plot"); };
+    const bars = plot("bar"), linePlot = plot("line"), piePlot = plot("pie");
+    check("Chart: labelled placeholders (bars, a vector line, a donut) in token colours", bars && bars.children.length === 6 &&
+      bars.children.every((b) => b.type === "RECTANGLE" && b.layoutSizingHorizontal === "FILL") &&
+      linePlot && linePlot.children[0].type === "VECTOR" && /^M /.test(linePlot.children[0].vectorPaths[0].data) && linePlot.children[0].layoutSizingVertical === "FILL" &&
+      piePlot && piePlot.children[0].children.length === 2 && piePlot.children[0].children.every((e) => e.type === "ELLIPSE" && e.arcData.innerRadius === 0.55) &&
+      named(/^Note$/, frame7("overview")).every((t) => /^Placeholder: (bar|line|pie) chart, not real data$/.test(t.characters)));
+    check("dashboard flows are all linked (tabs, buttons, modal actions)", r7.links >= 6 && !r7.warnings.some((w) => /^Flow /.test(w)), r7.links);
+    check("caption says the spec is unknown when the feature has no spec.md", s7.children.some((n) => role(n, "caption") &&
+      /^Generated from spec unknown · \d{4}-\d{2}-\d{2}$/.test(n.characters)));
+
+    // Spec drift: screens.json records the sha1 of the spec.md it was built from
+    console.log("spec drift");
+    const drift = path.join(tmp, "DRIFT-1");
+    fs.mkdirSync(path.join(drift, "design"), { recursive: true });
+    fs.writeFileSync(path.join(drift, "spec.md"), "# Billing\n- AC-1 overview\n- AC-2 totals\n- AC-3 list\n- AC-4 select\n- AC-5 confirm delete\n");
+    const dDoc = JSON.parse(fs.readFileSync(DASHBOARD, "utf8"));
+    dDoc.spec_sha1 = sha1(fs.readFileSync(path.join(drift, "spec.md")));
+    fs.writeFileSync(path.join(drift, "design", "screens.json"), JSON.stringify(dDoc, null, 2));
+    const dScreens = path.join(drift, "design", "screens.json");
+    const OLDER = "screens.json was built from an older spec.md; re-run the prototype";
+    r = py([RENDER, "check", dScreens, "--ds", DS]);
+    check("render check: matching spec_sha1 gives no drift warning", r.code === 0 && r.out.indexOf(OLDER) < 0 && /0 error\(s\), 0 warning\(s\)/.test(r.out) && r.out.indexOf("info:") < 0, r.out.slice(-300));
+    fs.appendFileSync(path.join(drift, "spec.md"), "Totals are shown in the account currency.\n");
+    r = py([RENDER, "check", dScreens, "--ds", DS, "--spec", path.join(drift, "spec.md")]);
+    check("render check: changed spec.md prints the drift warning and the new sha1", r.code === 0 && r.out.indexOf("warn:  " + OLDER) >= 0 &&
+      r.out.indexOf(sha1(fs.readFileSync(path.join(drift, "spec.md")))) >= 0, r.out.slice(-400));
+    r = py([BUILD, drift, "--ds", DS, "--out", path.join(tmp, "drift.json")]);
+    const dr = r.code === 0 ? JSON.parse(fs.readFileSync(path.join(tmp, "drift.json"), "utf8")) : null;
+    check("build_bundle warns about the same drift", dr && dr.warnings.some((w) => w.indexOf(OLDER) === 0) && dr.sources.spec.sha1 !== dDoc.spec_sha1, r.out.slice(-300));
+    delete dDoc.spec_sha1;
+    fs.writeFileSync(dScreens, JSON.stringify(dDoc));
+    r = py([RENDER, "check", dScreens, "--ds", DS]);
+    check("render check: without spec_sha1 it prints the value to record (info, not a warning)", r.code === 0 && /0 warning\(s\)/.test(r.out) &&
+      /info: .*has sha1 [0-9a-f]{40}; record it as "spec_sha1"/.test(r.out), r.out.slice(-300));
 
     // Bad input surfaces an error, not a crash
     const mock6 = createMock();

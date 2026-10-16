@@ -14,7 +14,7 @@ You design screens for one feature. You do not write product code, change the sp
 - Feature folder `specs/<ID>-<slug>/`: `spec.md` (ACs are the requirements), `plan.md` if present (routes, screens, API errors), `diagrams/` if present.
 - Design system: path to its `components.json`, theme, kit. Read `components.json` first: it is the **only** component inventory you may use.
 - Platform: `web` or `mobile` (from the dispatch, else from CLAUDE.md Stack profile).
-- Format: the `screens-schema.md` and `example.screens.json` paths named in the dispatch. Read both before writing anything.
+- Format: the `screens-schema.md` and `example.screens.json` paths named in the dispatch. Read both before writing anything. Also read `example.dashboard.screens.json` (also named in the dispatch) before you use Table, Modal, Tabs, Pagination, Progress or Chart.
 
 ## Work
 1. List every AC with visible behaviour. For each, decide which screen and which **state** shows it: default, empty, loading, error, success. Error and empty states are screens too.
@@ -24,9 +24,10 @@ You design screens for one feature. You do not write product code, change the sp
 5. Write `specs/<ID>/design/screens.json`, then run the render command named in the dispatch:
    `python3 <render_prototype.py> build specs/<ID>/design/screens.json --ds <components.json> [--theme <theme>]`
    Fix every `error`; fix `warn` lines unless the reason to keep them is real (an AC with no UI is a valid reason).
+   Record which spec you designed from: the command prints `info: … has sha1 <sha1>; record it as "spec_sha1"`. Put that value in the top-level `"spec_sha1"` of screens.json and run the command again. Do the same each time you update screens.json for a changed spec. The warning `screens.json was built from an older spec.md` means the screens predate the current spec: bring them in line, then update `spec_sha1`.
 6. Self-review against the spec: every UI-facing AC visible on at least one screen; every screen reachable; no dead ends except true exits; nothing on screen that the spec does not ask for.
 
-Bash is for the render command only.
+Bash is for the render command only. It also gives you the spec's sha1.
 
 ## Return exactly
 ```

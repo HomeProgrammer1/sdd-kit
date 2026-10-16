@@ -11,7 +11,7 @@
     },
     "surface-2": {
       "$type": "color",
-      "$value": "{palette.neutral.800}"
+      "$value": "{palette.neutral.700}"
     },
     "text": {
       "$type": "color",
@@ -68,6 +68,10 @@
     "info-subtle": {
       "$type": "color",
       "$value": "{palette.blue.950}"
+    },
+    "overlay": {
+      "$type": "color",
+      "$value": "{palette.scrim.70}"
     }
   },
   "space": {

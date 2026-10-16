@@ -26,6 +26,10 @@
         "$type": "color",
         "$value": "#5b5b66"
       },
+      "700": {
+        "$type": "color",
+        "$value": "#3a3a43"
+      },
       "800": {
         "$type": "color",
         "$value": "#2b2b33"
@@ -123,6 +127,16 @@
       "950": {
         "$type": "color",
         "$value": "#172840"
+      }
+    },
+    "scrim": {
+      "50": {
+        "$type": "color",
+        "$value": "#18181d80"
+      },
+      "70": {
+        "$type": "color",
+        "$value": "#000000b3"
       }
     }
   },

@@ -13,9 +13,13 @@ try:
         if s.get("phase") in ("done", "abandoned"):
             continue
         pause = s.get("pause") or {}
+        session = str(s.get("session") or "")
+        unrecorded = not session or "${" in session or "CLAUDE_SESSION_ID" in session
         lines.append(
             f"- {state_file.parent.name}: phase={s.get('phase')} level={s.get('autonomy')}"
             + (f" PAUSED: {pause.get('reason')}" if pause else "")
+            + (" (no session recorded: the sdd-kit guard applies its merge/deploy rails to every session"
+               " in this project until the run is resumed or set to abandoned)" if unrecorded else "")
         )
     if lines:
         print("Open SDD runs (specs/*/state.json):\n" + "\n".join(lines)

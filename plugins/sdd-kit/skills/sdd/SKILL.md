@@ -1,7 +1,7 @@
 ---
 name: sdd
-description: Spec-driven delivery orchestrator. Takes a feature request or ticket from idea to a reviewed pull request through discovery → spec (+ diagrams) → plan (+ optional design) → tasks → implement → review → verify → handover, with human gates. Use when the user runs /sdd-kit:sdd or asks to build a feature end to end.
-argument-hint: "<ID or new request> [--level=spec|plan|implement|push] [--design] [--figma]"
+description: Spec-driven delivery orchestrator. Takes a feature request or ticket from idea to a reviewed pull request through discovery → spec (+ diagrams) → plan (+ optional design) → tasks → implement → review → verify → handover, with human gates, or a quick lane for small fixes. Use when the user runs /sdd-kit:sdd or asks to build a feature end to end.
+argument-hint: "<ID or new request> [--level=spec|plan|implement|push] [--quick] [--design] [--figma]"
 disable-model-invocation: true
 ---
 
@@ -32,8 +32,20 @@ Load now: `sdd-kit:autonomy-contract`, `sdd-kit:run-state`. Read CLAUDE.md → S
 
 ## Step 0 — Resolve the run
 - Existing `specs/<ID>-*` → read `state.json` + `ledger.md` and **resume from `phase`**. Never redo what `side_effects` records.
-- New → create `specs/<ID>-<slug>/` (ID = ticket key, else next `F-NNN`), `state.json` (`phase: discovery`, `autonomy` from `--level`, default `spec`; `options.design` / `options.figma` from flags), `ledger.md` with first line `# Ledger — <ID>`.
+- New → create `specs/<ID>-<slug>/` (ID = ticket key, else next `F-NNN`), `state.json` (`phase: discovery`, `autonomy` from `--level`, default `spec`; `lane: quick` with `--quick`, else `full`; `options.design` / `options.figma` from flags), `ledger.md` with first line `# Ledger — <ID>`.
 - Either way set `state.json` → `"session": "${CLAUDE_SESSION_ID}"` before any other step. The guard applies sdd-kit's merge/deploy/secret rails to the session recorded there (and to sdd-kit agents), and leaves every other session alone.
+- Then confirm the guard sees it: `bash "${CLAUDE_PLUGIN_ROOT}/hooks/run.sh" sdd_session.py --status --session "${CLAUDE_SESSION_ID}"`. Expected: `<ID>: rails on for this session (…)`. Any other output (no session recorded, placeholder not substituted, Python not found) → tell the human in one line what it says, then continue. While a run has no usable session the guard applies its rails to every session in this project, so nothing runs unprotected.
+- `lane: quick` → follow **Quick lane** below instead of Steps 1–6.
+
+## Quick lane (`--quick`)
+For a small change only: a bug fix or tweak touching at most 3 files, with no new screen, public API, schema or dependency, and nothing in auth, payments, permissions or secrets. About 3 subagent runs instead of 16 or more.
+1. Write `spec.md` yourself: Goal, the ACs and, for a bug, the reproduction. No discovery; no diagram unless the change alters a flow the existing diagram shows. One task in `tasks.md`.
+2. One gate: show the ACs and the task in one message and ask "Approve?". `--level` still caps how far the run goes.
+3. Load `sdd-kit:worktree` as in Step 4.1.
+4. One **implementer** (sonnet), one **reviewer** (sonnet), at most 2 fix rounds, then commit as in Step 5.5.
+5. **verifier** (sonnet) for the ACs. **security-auditor** only if the diff touches anything the first paragraph excludes.
+6. Step 7 as usual.
+The moment the change grows past these limits, log `Ruling: leaving the quick lane — <why>` in the ledger, set `lane: full` and continue at Step 2.
 
 ## Step 1 — Discovery
 Load `sdd-kit:discovery` and run it here, in the main session. Output: `discovery.md`.

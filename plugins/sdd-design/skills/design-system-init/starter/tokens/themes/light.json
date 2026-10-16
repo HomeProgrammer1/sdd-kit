@@ -17,7 +17,8 @@
     "warning":     { "$type": "color", "$value": "{palette.amber.800}" },
     "warning-subtle": { "$type": "color", "$value": "{palette.amber.50}" },
     "info":        { "$type": "color", "$value": "{palette.blue.700}" },
-    "info-subtle": { "$type": "color", "$value": "{palette.blue.50}" }
+    "info-subtle": { "$type": "color", "$value": "{palette.blue.50}" },
+    "overlay":     { "$type": "color", "$value": "{palette.scrim.50}" }
   },
   "space": {
     "1": { "$value": "{scale.space.1}" }, "2": { "$value": "{scale.space.2}" }, "3": { "$value": "{scale.space.3}" },

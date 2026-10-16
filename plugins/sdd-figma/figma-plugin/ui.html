@@ -56,7 +56,7 @@
 </head>
 <body>
   <h1>SDD Kit Import</h1>
-  <p>Choose <code>specs/&lt;ID&gt;/figma/bundle.json</code> (made by <code>build_bundle.py</code>). Build creates or refreshes the “How it works” and “Screens” pages.</p>
+  <p>Choose <code>specs/&lt;ID&gt;/figma/bundle.json</code> (made by <code>build_bundle.py</code>). Build creates or refreshes the “How it works” and “Screens” pages; their earlier generated layers move to the “Archive” page, nothing is deleted.</p>
 
   <div class="pick">
     <label>Choose bundle.json…<input id="file" type="file" accept=".json,application/json"></label>
@@ -161,6 +161,8 @@
       line("Diagrams: " + r.diagrams + " · Screens: " + r.screens + " · Prototype links: " + r.links);
       line("Variables: " + r.variables + (r.collection ? " in “" + r.collection + "” (" + r.variablesCreated + " new)" : "") + " · Bindings: " + r.bindings);
       line("Font: " + r.font);
+      var a = r.archived || {};
+      line("Archived: " + (a.layers ? a.layers + " earlier layer(s) → “" + a.page + "” › " + a.run : "none"));
       line("Instanced: " + counts(r.instanced));
       line("Drawn: " + counts(r.drawn));
       if (r.fallbacks && Object.keys(r.fallbacks).length) line("Library fallbacks (drawn instead): " + counts(r.fallbacks), "warn");

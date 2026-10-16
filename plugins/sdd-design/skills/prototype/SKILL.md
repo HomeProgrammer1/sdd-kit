@@ -24,6 +24,7 @@ Feature folder `specs/<ID>-*/`. The spec must be approved (`state.json` → `app
 Dispatch the `sdd-design:ux-designer` agent with: the feature folder, the design-system path, theme, kit, platform, and these paths verbatim:
 - schema: `${CLAUDE_SKILL_DIR}/references/screens-schema.md`
 - example: `${CLAUDE_SKILL_DIR}/references/example.screens.json`
+- dashboard example (Table, Modal, Tabs, Pagination, Progress, Chart): `${CLAUDE_SKILL_DIR}/references/example.dashboard.screens.json`
 - render script: `${CLAUDE_SKILL_DIR}/scripts/render_prototype.py`
  It writes `design/screens.json` and renders `design/index.html`, then returns `STATUS`, `SCREENS`, `AC_COVERAGE`, `CONCERNS`.
 - `NEEDS_CONTEXT` → answer from the spec/plan or ask the human.
@@ -31,9 +32,10 @@ Dispatch the `sdd-design:ux-designer` agent with: the feature folder, the design
 
 ## 3. Check
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/render_prototype.py" check specs/<ID>/design/screens.json --ds <components.json>
+python3 "${CLAUDE_SKILL_DIR}/scripts/render_prototype.py" check specs/<ID>/design/screens.json --ds <components.json> [--theme <theme>] --spec specs/<ID>/spec.md
 ```
 Errors must be zero. Contrast warnings are real defects of the design system: report them to the human, do not patch colours in screens.
+`screens.json was built from an older spec.md` means the spec changed after the screens were made (its sha1 no longer matches `spec_sha1`). Dispatch the agent again to update the screens. An `info:` line asking you to record `spec_sha1` means the agent skipped that step; send it back.
 
 ## 4. Report
 ```
@@ -43,4 +45,4 @@ NEXT: review the prototype; /sdd-figma:figma-export <ID> to lay it out in Figma
 ```
 The human reviews the prototype together with the plan at Gate 2. screens.json is committed with the spec; index.html is generated and may be committed for reviewers.
 
-References: `${CLAUDE_SKILL_DIR}/references/screens-schema.md` (format), `${CLAUDE_SKILL_DIR}/references/example.screens.json` (worked example).
+References: `${CLAUDE_SKILL_DIR}/references/screens-schema.md` (format), `${CLAUDE_SKILL_DIR}/references/example.screens.json` (worked example), `${CLAUDE_SKILL_DIR}/references/example.dashboard.screens.json` (data and overlay components).

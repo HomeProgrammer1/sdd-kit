@@ -4,12 +4,13 @@
   * every JSON file parses; marketplace entries point at real plugins whose
     plugin.json name and version match
   * every skill and agent has the frontmatter Claude Code needs
-  * every hook script hooks.json names exists
+  * every hook script hooks.json names exists (directly or through run.sh)
   * the guard allows/denies the cases below in each mode, inside and outside
-    an SDD run
+    an SDD run, including known bypass spellings and a run that recorded no
+    session; run.sh refuses in strict mode when Python is missing
   * the diagram engine renders the example spec with no errors or warnings
-  * the prototype renderer accepts the example screens with the starter design
-    system (light and dark), including the contrast contract
+  * the prototype renderer accepts every example screens file with the starter
+    design system (light and dark), including the contrast contract
   * the Figma plugin test passes (when node is installed)
   * no file mentions a name on the private deny list (stored as hashes only)
 
@@ -97,7 +98,9 @@ for p in template.glob(".claude/rules/*.md"):
         errors.append(f"{p.relative_to(repo)}: rule without paths: frontmatter")
 
 for hooks in plugins_dir.glob("*/hooks/hooks.json"):
-    for script in set(re.findall(r"hooks/[\w]+\.(?:py|sh)", hooks.read_text(encoding="utf-8"))):
+    text = hooks.read_text(encoding="utf-8")
+    named = set(re.findall(r"hooks/[\w]+\.(?:py|sh)", text)) | {"hooks/" + s for s in re.findall(r'run\.sh\\?" ([\w]+\.py)', text)}
+    for script in named:
         if not (hooks.parent.parent / script).exists():
             errors.append(f"{hooks.relative_to(repo)} references missing {script}")
 
@@ -109,6 +112,9 @@ proj = Path(tempfile.mkdtemp(prefix="sdd-guard-"))
 (proj / "specs/F-2").mkdir(parents=True)
 (proj / "specs/F-2/state.json").write_text(json.dumps({"id": "F-2", "phase": "done", "session": "S-OLD"}))
 P = str(proj)
+orphan = Path(tempfile.mkdtemp(prefix="sdd-guard-orphan-"))
+(orphan / "specs/F-3").mkdir(parents=True)
+(orphan / "specs/F-3/state.json").write_text(json.dumps({"id": "F-3", "phase": "implementing", "session": "${CLAUDE_SESSION_ID}"}))
 
 
 def bash(cmd, **kw):
@@ -135,11 +141,37 @@ cases = [
     ("sdd", write("/home/u/.ssh/id_ed25519"), True),
     ("sdd", write(P + "/src/a.ts", agent_type="architect"), False),
     ("sdd", bash("gh pr merge 12", session_id="S-OLD"), False),
+    # hard stops: spellings that slipped through before
+    ("sdd", bash("rm -r -f /"), True),
+    ("sdd", bash("rm --recursive --force /"), True),
+    ("sdd", bash("rm -rf ./"), True),
+    ("sdd", bash("sudo rm -Rf /*"), True),
+    ("sdd", bash("rm -rf ${HOME}"), True),
+    ("sdd", bash("find / -name x -delete"), True),
+    ("sdd", bash("python3 -c \"import shutil; shutil.rmtree('/')\""), True),
+    ("sdd", bash('bash -c "rm -rf /"'), True),
+    ("sdd", bash("sh -c 'cd /tmp && rm -rf .'"), True),
+    ("sdd", bash("git -C . push -f origin main"), True),
+    ("sdd", bash("git push --force origin HEAD:refs/heads/main"), True),
+    ("sdd", bash("git push origin +master"), True),
+    ("sdd", bash("git push --mirror origin"), True),
+    ("sdd", bash("git push origin --delete main"), True),
+    # ordinary work stays allowed
+    ("sdd", bash("rm -rf build dist ./coverage"), False),
+    ("sdd", bash("find . -name '*.pyc' -delete"), False),
+    ("sdd", bash("python3 -c \"import shutil; shutil.rmtree('./build')\""), False),
+    ("sdd", bash("echo done; ls /"), False),
+    ("sdd", bash("git push --force-with-lease origin feat/x"), False),
     # sdd-kit's own agents: process rails
     ("sdd", bash("git push --force origin feat/x", **ours), True),
     ("sdd", bash("git push origin main", **ours), True),
     ("sdd", bash("git push -u origin feat/F-001-main-menu", **ours), False),
     ("sdd", bash("gh pr merge 12", **ours), True),
+    ("sdd", bash("gh api -X PUT repos/o/r/pulls/12/merge", **ours), True),
+    ("sdd", bash("gh pr review 12 --approve", **ours), True),
+    ("sdd", bash("git push origin HEAD:main", **ours), True),
+    ("sdd", bash("git push --tags", **ours), True),
+    ("sdd", bash("docker push registry/app:1", **ours), True),
     ("sdd", bash("terraform apply", **ours), True),
     ("sdd", bash("npm test", **ours), False),
     ("sdd", write(P + "/.env", **ours), True),
@@ -161,6 +193,9 @@ cases = [
     ("hard-only", bash("gh pr merge 12", **ours), False),
     ("hard-only", bash("rm -rf ~"), True),
     ("off", bash("rm -rf /"), False),
+    # a run that never recorded its session: rails for every session in that project
+    ("sdd", bash("gh pr merge 12", cwd=str(orphan)), True),
+    ("sdd", bash("npm test", cwd=str(orphan)), False),
 ]
 for mode, payload, should_deny in cases:
     env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "SDD_GUARD": mode}
@@ -168,7 +203,24 @@ for mode, payload, should_deny in cases:
     if ('"deny"' in out) != should_deny:
         errors.append(f"guard[{mode}]: expected {'deny' if should_deny else 'allow'} for "
                       f"{payload.get('agent_type', '-')}/{payload.get('session_id')}: {payload['tool_input']}")
+for mode in ("strict", "sdd"):
+    out = subprocess.run(PY + [str(guard)], input="not json", capture_output=True, text=True,
+                         env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "SDD_GUARD": mode}).stdout
+    if ('"deny"' in out) != (mode == "strict"):
+        errors.append(f"guard[{mode}]: an internal error should {'block' if mode == 'strict' else 'let the call through'}")
+bash_bin = shutil.which("bash")
+if bash_bin:
+    wrapper = kit / "hooks/run.sh"
+    r = subprocess.run([bash_bin, str(wrapper), "guard.py"], input="{}", capture_output=True, text=True,
+                       env={"PATH": "/nonexistent", "SDD_GUARD": "strict"})
+    if r.returncode != 2:
+        errors.append(f"run.sh: without Python, strict mode should exit 2, got {r.returncode}")
+    r = subprocess.run([bash_bin, str(wrapper), "guard.py"], input=json.dumps(bash("rm -r -f /")),
+                       capture_output=True, text=True, env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")})
+    if '"deny"' not in r.stdout:
+        errors.append("run.sh: did not pass the payload through to guard.py")
 shutil.rmtree(proj, ignore_errors=True)
+shutil.rmtree(orphan, ignore_errors=True)
 
 # ------------------------------------------------------------------ diagram engine
 engine = plugins_dir / "sdd-diagrams/skills/feature-diagrams/scripts/sdd_diagrams.py"
@@ -182,15 +234,16 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # ------------------------------------------------------------------ prototype renderer
 renderer = plugins_dir / "sdd-design/skills/prototype/scripts/render_prototype.py"
-example_screens = plugins_dir / "sdd-design/skills/prototype/references/example.screens.json"
+examples = sorted((plugins_dir / "sdd-design/skills/prototype/references").glob("example*.screens.json"))
 starter = plugins_dir / "sdd-design/skills/design-system-init/starter/components.json"
-for theme in ("light", "dark"):
-    r = subprocess.run(PY + [str(renderer), "check", str(example_screens), "--ds", str(starter), "--theme", theme],
-                       capture_output=True, text=True)
-    last = (r.stdout.strip().splitlines() or [""])[-1]
-    if r.returncode != 0 or "0 error(s), 0 warning(s)" not in last:
-        errors.append(f"render_prototype ({theme}): {r.stdout.strip()[-400:] or r.stderr.strip()[-300:]}")
-notes.append("prototype: example passes with the starter design system (light, dark)")
+for example_screens in examples:
+    for theme in ("light", "dark"):
+        r = subprocess.run(PY + [str(renderer), "check", str(example_screens), "--ds", str(starter), "--theme", theme],
+                           capture_output=True, text=True)
+        last = (r.stdout.strip().splitlines() or [""])[-1]
+        if r.returncode != 0 or "0 error(s), 0 warning(s)" not in last:
+            errors.append(f"render_prototype {example_screens.name} ({theme}): {r.stdout.strip()[-400:] or r.stderr.strip()[-300:]}")
+notes.append(f"prototype: {len(examples)} examples pass with the starter design system (light, dark)")
 
 # ------------------------------------------------------------------ Figma plugin
 figma_test = repo / "scripts/test_figma_plugin.js"

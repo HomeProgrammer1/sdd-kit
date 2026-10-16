@@ -1,10 +1,20 @@
 {
   "name": "sdd-figma",
   "displayName": "SDD Figma",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Lay out a feature in Figma: How-it-works diagrams and prototype screens as named auto-layout frames bound to design-system variables, with prototype links. Uses the Figma MCP connector when connected, otherwise a bundled Figma plugin and a bundle.json file, so no connector is required.",
-  "author": { "name": "HomeProgrammer1", "url": "https://github.com/HomeProgrammer1" },
+  "author": {
+    "name": "HomeProgrammer1",
+    "url": "https://github.com/HomeProgrammer1"
+  },
   "repository": "https://github.com/HomeProgrammer1/sdd-kit",
   "license": "MIT",
-  "keywords": ["figma", "design", "diagrams", "prototype", "design-system", "spec-driven"]
+  "keywords": [
+    "figma",
+    "design",
+    "diagrams",
+    "prototype",
+    "design-system",
+    "spec-driven"
+  ]
 }

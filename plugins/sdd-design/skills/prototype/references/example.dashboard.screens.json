@@ -1,0 +1,682 @@
+{
+  "$schema": "sdd-screens/1",
+  "feature": "EXAMPLE-002",
+  "title": "Billing dashboard",
+  "platform": "web",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "screens": [
+    {
+      "id": "overview",
+      "title": "Billing overview",
+      "state": "default",
+      "ac": [
+        "AC-1",
+        "AC-2"
+      ],
+      "body": {
+        "type": "Stack",
+        "direction": "horizontal",
+        "fill": "background",
+        "align": "stretch",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Sidebar",
+            "items": [
+              "Home",
+              "Billing",
+              "Customers",
+              "Settings"
+            ],
+            "active": 1
+          },
+          {
+            "type": "Stack",
+            "gap": "space.6",
+            "padding": "space.8",
+            "width": "fill",
+            "children": [
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Stack",
+                    "gap": "space.1",
+                    "children": [
+                      {
+                        "type": "Text",
+                        "variant": "title",
+                        "text": "Billing"
+                      },
+                      {
+                        "type": "Text",
+                        "variant": "body",
+                        "tone": "muted",
+                        "text": "Invoices and revenue for Acme Inc."
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "primary",
+                    "label": "New invoice"
+                  }
+                ]
+              },
+              {
+                "type": "Tabs",
+                "items": [
+                  {
+                    "label": "Overview",
+                    "link": "overview"
+                  },
+                  {
+                    "label": "Invoices",
+                    "link": "invoices"
+                  }
+                ],
+                "active": 0
+              },
+              {
+                "type": "Grid",
+                "columns": 3,
+                "gap": "space.4",
+                "children": [
+                  {
+                    "type": "Card",
+                    "padding": "space.5",
+                    "gap": "space.2",
+                    "children": [
+                      {
+                        "type": "Text",
+                        "variant": "caption",
+                        "tone": "muted",
+                        "text": "Revenue this month"
+                      },
+                      {
+                        "type": "Text",
+                        "variant": "title",
+                        "text": "$48,250"
+                      },
+                      {
+                        "type": "Badge",
+                        "tone": "success",
+                        "text": "+12% vs last month"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Card",
+                    "padding": "space.5",
+                    "gap": "space.2",
+                    "children": [
+                      {
+                        "type": "Text",
+                        "variant": "caption",
+                        "tone": "muted",
+                        "text": "Outstanding"
+                      },
+                      {
+                        "type": "Text",
+                        "variant": "title",
+                        "text": "$9,800"
+                      },
+                      {
+                        "type": "Badge",
+                        "tone": "default",
+                        "text": "14 invoices"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Card",
+                    "padding": "space.5",
+                    "gap": "space.2",
+                    "children": [
+                      {
+                        "type": "Text",
+                        "variant": "caption",
+                        "tone": "muted",
+                        "text": "Overdue"
+                      },
+                      {
+                        "type": "Text",
+                        "variant": "title",
+                        "text": "$2,140"
+                      },
+                      {
+                        "type": "Badge",
+                        "tone": "danger",
+                        "text": "3 invoices"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "Grid",
+                "columns": 3,
+                "gap": "space.4",
+                "children": [
+                  {
+                    "type": "Chart",
+                    "kind": "bar",
+                    "title": "Revenue by month"
+                  },
+                  {
+                    "type": "Chart",
+                    "kind": "line",
+                    "title": "Paying customers"
+                  },
+                  {
+                    "type": "Chart",
+                    "kind": "pie",
+                    "title": "Revenue by plan"
+                  }
+                ]
+              },
+              {
+                "type": "Card",
+                "padding": "space.5",
+                "gap": "space.4",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "heading",
+                    "text": "Plan usage"
+                  },
+                  {
+                    "type": "Progress",
+                    "label": "Invoices sent (720 of 1,000)",
+                    "value": 72
+                  },
+                  {
+                    "type": "Progress",
+                    "label": "Storage (3.5 of 10 GB)",
+                    "value": 35
+                  },
+                  {
+                    "type": "Link",
+                    "text": "View all invoices",
+                    "link": "invoices"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invoices",
+      "title": "Invoices",
+      "state": "default",
+      "ac": [
+        "AC-3",
+        "AC-4"
+      ],
+      "note": "One overdue invoice selected for deletion",
+      "body": {
+        "type": "Stack",
+        "direction": "horizontal",
+        "fill": "background",
+        "align": "stretch",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Sidebar",
+            "items": [
+              "Home",
+              "Billing",
+              "Customers",
+              "Settings"
+            ],
+            "active": 1
+          },
+          {
+            "type": "Stack",
+            "gap": "space.6",
+            "padding": "space.8",
+            "width": "fill",
+            "children": [
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Stack",
+                    "gap": "space.1",
+                    "children": [
+                      {
+                        "type": "Text",
+                        "variant": "title",
+                        "text": "Billing"
+                      },
+                      {
+                        "type": "Text",
+                        "variant": "body",
+                        "tone": "muted",
+                        "text": "Invoices and revenue for Acme Inc."
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "primary",
+                    "label": "New invoice"
+                  }
+                ]
+              },
+              {
+                "type": "Tabs",
+                "items": [
+                  {
+                    "label": "Overview",
+                    "link": "overview"
+                  },
+                  {
+                    "label": "Invoices",
+                    "link": "invoices"
+                  }
+                ],
+                "active": 1
+              },
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "body",
+                    "tone": "muted",
+                    "text": "1 of 48 invoices selected"
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "danger",
+                    "label": "Delete selected",
+                    "link": "confirm-delete"
+                  }
+                ]
+              },
+              {
+                "type": "Table",
+                "columns": [
+                  "Invoice",
+                  "Customer",
+                  "Issued",
+                  {
+                    "label": "Amount",
+                    "align": "end"
+                  },
+                  "Status"
+                ],
+                "rows": [
+                  [
+                    "INV-1048",
+                    "Northwind Traders",
+                    "12 Oct 2026",
+                    "$1,200.00",
+                    {
+                      "text": "Paid",
+                      "tone": "success"
+                    }
+                  ],
+                  [
+                    "INV-1047",
+                    "Globex",
+                    "10 Oct 2026",
+                    "$640.00",
+                    {
+                      "text": "Overdue",
+                      "tone": "danger"
+                    }
+                  ],
+                  [
+                    "INV-1046",
+                    "Initech",
+                    "8 Oct 2026",
+                    "$2,310.00",
+                    {
+                      "text": "Sent",
+                      "tone": "primary"
+                    }
+                  ],
+                  [
+                    "INV-1045",
+                    "Umbrella Health",
+                    "5 Oct 2026",
+                    "$480.00",
+                    {
+                      "text": "Paid",
+                      "tone": "success"
+                    }
+                  ],
+                  [
+                    "INV-1044",
+                    "Stark Logistics",
+                    "2 Oct 2026",
+                    "$3,050.00",
+                    {
+                      "text": "Draft",
+                      "tone": "default"
+                    }
+                  ],
+                  [
+                    "INV-1043",
+                    "Wayne Foods",
+                    "29 Sep 2026",
+                    "$910.00",
+                    {
+                      "text": "Paid",
+                      "tone": "success"
+                    }
+                  ]
+                ],
+                "selectable": true,
+                "selected": [
+                  1
+                ],
+                "sortable": [
+                  0,
+                  2,
+                  3
+                ]
+              },
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "caption",
+                    "tone": "muted",
+                    "text": "Showing 7–12 of 48"
+                  },
+                  {
+                    "type": "Pagination",
+                    "page": 2,
+                    "pages": 8
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "confirm-delete",
+      "title": "Confirm delete",
+      "state": "default",
+      "ac": [
+        "AC-5"
+      ],
+      "note": "Deleting asks first; Cancel and Delete both return to the list",
+      "body": {
+        "type": "Stack",
+        "direction": "horizontal",
+        "fill": "background",
+        "align": "stretch",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Sidebar",
+            "items": [
+              "Home",
+              "Billing",
+              "Customers",
+              "Settings"
+            ],
+            "active": 1
+          },
+          {
+            "type": "Stack",
+            "gap": "space.6",
+            "padding": "space.8",
+            "width": "fill",
+            "children": [
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Stack",
+                    "gap": "space.1",
+                    "children": [
+                      {
+                        "type": "Text",
+                        "variant": "title",
+                        "text": "Billing"
+                      },
+                      {
+                        "type": "Text",
+                        "variant": "body",
+                        "tone": "muted",
+                        "text": "Invoices and revenue for Acme Inc."
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "primary",
+                    "label": "New invoice"
+                  }
+                ]
+              },
+              {
+                "type": "Tabs",
+                "items": [
+                  {
+                    "label": "Overview",
+                    "link": "overview"
+                  },
+                  {
+                    "label": "Invoices",
+                    "link": "invoices"
+                  }
+                ],
+                "active": 1
+              },
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "body",
+                    "tone": "muted",
+                    "text": "1 of 48 invoices selected"
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "danger",
+                    "label": "Delete selected",
+                    "link": "confirm-delete"
+                  }
+                ]
+              },
+              {
+                "type": "Table",
+                "columns": [
+                  "Invoice",
+                  "Customer",
+                  "Issued",
+                  {
+                    "label": "Amount",
+                    "align": "end"
+                  },
+                  "Status"
+                ],
+                "rows": [
+                  [
+                    "INV-1048",
+                    "Northwind Traders",
+                    "12 Oct 2026",
+                    "$1,200.00",
+                    {
+                      "text": "Paid",
+                      "tone": "success"
+                    }
+                  ],
+                  [
+                    "INV-1047",
+                    "Globex",
+                    "10 Oct 2026",
+                    "$640.00",
+                    {
+                      "text": "Overdue",
+                      "tone": "danger"
+                    }
+                  ],
+                  [
+                    "INV-1046",
+                    "Initech",
+                    "8 Oct 2026",
+                    "$2,310.00",
+                    {
+                      "text": "Sent",
+                      "tone": "primary"
+                    }
+                  ],
+                  [
+                    "INV-1045",
+                    "Umbrella Health",
+                    "5 Oct 2026",
+                    "$480.00",
+                    {
+                      "text": "Paid",
+                      "tone": "success"
+                    }
+                  ],
+                  [
+                    "INV-1044",
+                    "Stark Logistics",
+                    "2 Oct 2026",
+                    "$3,050.00",
+                    {
+                      "text": "Draft",
+                      "tone": "default"
+                    }
+                  ],
+                  [
+                    "INV-1043",
+                    "Wayne Foods",
+                    "29 Sep 2026",
+                    "$910.00",
+                    {
+                      "text": "Paid",
+                      "tone": "success"
+                    }
+                  ]
+                ],
+                "selectable": true,
+                "selected": [
+                  1
+                ],
+                "sortable": [
+                  0,
+                  2,
+                  3
+                ]
+              },
+              {
+                "type": "Stack",
+                "direction": "horizontal",
+                "align": "center",
+                "justify": "between",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "caption",
+                    "tone": "muted",
+                    "text": "Showing 7–12 of 48"
+                  },
+                  {
+                    "type": "Pagination",
+                    "page": 2,
+                    "pages": 8
+                  }
+                ]
+              },
+              {
+                "type": "Modal",
+                "title": "Delete invoice INV-1047?",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "body",
+                    "tone": "muted",
+                    "text": "Globex will no longer see it in their portal. This cannot be undone."
+                  }
+                ],
+                "actions": [
+                  {
+                    "type": "Button",
+                    "variant": "secondary",
+                    "label": "Cancel",
+                    "link": "invoices"
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "danger",
+                    "label": "Delete invoice",
+                    "link": "invoices"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "flows": [
+    {
+      "from": "overview",
+      "to": "invoices",
+      "on": "Invoices",
+      "ac": "AC-3"
+    },
+    {
+      "from": "invoices",
+      "to": "overview",
+      "on": "Overview",
+      "ac": "AC-1"
+    },
+    {
+      "from": "invoices",
+      "to": "confirm-delete",
+      "on": "Delete selected",
+      "ac": "AC-5"
+    },
+    {
+      "from": "confirm-delete",
+      "to": "invoices",
+      "on": "Cancel",
+      "ac": "AC-5"
+    },
+    {
+      "from": "confirm-delete",
+      "to": "invoices",
+      "on": "Delete invoice",
+      "ac": "AC-5"
+    }
+  ]
+}

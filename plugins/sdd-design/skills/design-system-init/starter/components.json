@@ -7,9 +7,9 @@
     "dark": ["tokens/primitives.json", "tokens/themes/dark.json"]
   },
   "kits": {
-    "saas-dashboard": ["Sidebar", "NavBar", "Card", "Grid", "Badge", "Select", "Toggle"],
+    "saas-dashboard": ["Sidebar", "NavBar", "Card", "Grid", "Badge", "Select", "Toggle", "Table", "Tabs", "Pagination", "Chart", "Modal", "Progress"],
     "marketing-site": ["NavBar", "Image", "Grid", "Card", "Button", "Link"],
-    "mobile-app": ["NavBar", "TabBar", "List", "Toggle", "Avatar"]
+    "mobile-app": ["NavBar", "TabBar", "List", "Toggle", "Avatar", "Modal", "Progress"]
   },
   "components": {
     "Stack": {}, "Grid": {}, "Card": {}, "Divider": {}, "Spacer": {},
@@ -20,6 +20,8 @@
     "Alert": { "variants": ["info", "success", "warning", "danger"] },
     "Badge": { "variants": ["default", "primary", "danger", "success"] },
     "Image": {}, "Avatar": {}, "List": {},
-    "NavBar": {}, "TabBar": {}, "Sidebar": {}
+    "NavBar": {}, "TabBar": {}, "Sidebar": {},
+    "Table": {}, "Modal": {}, "Tabs": {}, "Pagination": {}, "Progress": {},
+    "Chart": { "variants": ["line", "bar", "pie"] }
   }
 }

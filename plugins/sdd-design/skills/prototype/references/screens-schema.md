@@ -11,6 +11,7 @@
   "title": "Password reset",
   "platform": "web",
   "viewport": { "width": 1280, "height": 800 },
+  "spec_sha1": "3f786850e387550fdab836ed7e6dc881de23001b",
   "screens": [
     {
       "id": "enter-email",
@@ -30,6 +31,7 @@
 | Field | Rule |
 |---|---|
 | `platform` | `web` or `mobile`. Default viewport: web 1280×800, mobile 390×844. |
+| `spec_sha1` | Optional, but write it. The sha1 of the bytes of the `spec.md` this file was built from: 40 lower-case hex characters (`sha1sum spec.md`). `render_prototype.py check` prints it on an `info:` line while the field is missing. When `spec.md` changes later, `check` and `build_bundle.py` warn `screens.json was built from an older spec.md; re-run the prototype`. Update it each time you bring screens.json in line with the spec. |
 | `screens[].id` | kebab-case, unique. One screen per meaningful **state**: default, empty, loading, error, success. |
 | `screens[].ac` | The AC IDs this screen makes visible. Every UI-facing AC appears on at least one screen. |
 | `screens[].body` | One root node, usually a `Stack`. |
@@ -60,8 +62,24 @@ Every node has `type`. Values written as `"space.4"`, `"radius.md"`, `"color.sur
 | `TabBar` | `items`, `active` (index) |
 | `Sidebar` | `items`, `active` (index) |
 | `Divider`, `Spacer` | none |
+| `Table` | `columns` (labels, or `{label, align}` with `align` `start`\|`end`), `rows` (one list per row, one cell per column), `selectable` (bool: a checkbox column), `selected` (row indexes; needs `selectable`), `sortable` (`true` for every column, or a list of column indexes) |
+| `Modal` | `title`, `children` (the body), `actions` (`Button` or `Link` nodes, the main action last) |
+| `Tabs` | `items` (labels, or `{label, link}`), `active` (index) |
+| `Pagination` | `pages` (total, 1 or more), `page` (current, 1-based) |
+| `Progress` | `value` (0–100), `label` |
+| `Chart` | `kind` (`line`\|`bar`\|`pie`), `title` |
 
 A design system may add types in its `components.json`; `render_prototype.py check` rejects any type or variant the design system does not declare.
+
+### Data and overlay components
+
+- **Table** cells are text, a number, or `{"text": "Paid", "tone": "success"}`, which draws a Badge. The tone must be a Badge variant of the design system. A table shows a handful of representative rows; pagination says how many more there are.
+- **Modal** is drawn open: a scrim (`color.overlay`) over the whole screen with the dialog centred on it. Make it the last child of the screen's root, put the page it covers in the same screen, and give it its own screen per state (for example `invoices` and `confirm-delete`). One Modal per screen. Each action's `link` is the screen it leads to, so Cancel usually links back to the screen without the Modal.
+- **Tabs** switch between screens: an inactive item with a `link` navigates there, and the item for the current screen is `active`. They are not a way to hide content inside one screen.
+- **Chart** is a labelled placeholder, not a chart of real data. It shows the `kind` and the `title`, so the layout and the place of the chart can be reviewed before the real chart is designed. The kinds are `Chart.variants` in `components.json` (default `line`, `bar`, `pie`).
+- **Progress** is a determinate bar: `value` is a percentage. Show indeterminate loading with a loading-state screen instead.
+
+`references/example.dashboard.screens.json` uses all six.
 
 ## components.json (lives in the design-system repo)
 
@@ -87,3 +105,5 @@ A design system may add types in its `components.json`; `render_prototype.py che
 ## Semantic tokens the renderer expects
 
 `color.background`, `color.surface`, `color.surface-2`, `color.text`, `color.text-muted`, `color.border`, `color.primary`, `color.on-primary`, `color.danger`, `color.success`, `color.warning`, `color.info`; `space.1` … `space.12`; `radius.sm`, `radius.md`, `radius.lg`; `font.family.sans`, `font.size.caption|body|heading|title|display`, `font.weight.regular|medium|bold`. Missing ones fall back to neutral defaults and are reported by `check`.
+
+Optional: `color.overlay`, the Modal scrim, as a colour with alpha (`#18181d80`). `check` asks for it only when a screen uses a Modal. `color.surface-2` is used for table headers, progress tracks and chart plots, so it has to differ visibly from `color.surface` in every theme.

@@ -1,7 +1,7 @@
 {
   "name": "sdd-kit",
   "displayName": "SDD Kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Spec-driven delivery for any software project (web, mobile, backend): discovery, spec with How-it-works diagrams, plan, TDD implementation with two-verdict review, verification and a draft PR, behind three human gates. Coexists with other workflow plugins.",
   "author": {
     "name": "HomeProgrammer1",
