@@ -1,0 +1,12 @@
+{
+  "gitlab": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["-y", "@zereight/mcp-gitlab"],
+    "env": {
+      "GITLAB_API_URL": "${GITLAB_API_URL:-https://gitlab.com/api/v4}",
+      "GITLAB_PERSONAL_ACCESS_TOKEN": "${GITLAB_TOKEN}",
+      "GITLAB_DENIED_TOOLS_REGEX": "(merge_merge_request|approve_merge_request|delete_|fork_repository|create_repository|update_project|cancel_pipeline|play_pipeline)"
+    }
+  }
+}

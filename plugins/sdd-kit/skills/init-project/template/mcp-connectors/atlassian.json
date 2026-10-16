@@ -1,0 +1,14 @@
+{
+  "atlassian": {
+    "type": "stdio",
+    "command": "uvx",
+    "args": ["mcp-atlassian"],
+    "env": {
+      "JIRA_URL": "${JIRA_URL}",
+      "JIRA_PERSONAL_TOKEN": "${JIRA_TOKEN}",
+      "CONFLUENCE_URL": "${CONFLUENCE_URL}",
+      "CONFLUENCE_PERSONAL_TOKEN": "${CONFLUENCE_TOKEN}",
+      "ENABLED_TOOLS": "jira_get_issue,jira_search,jira_add_comment,jira_create_issue,jira_create_issue_link,confluence_search,confluence_get_page,confluence_create_page,confluence_update_page"
+    }
+  }
+}

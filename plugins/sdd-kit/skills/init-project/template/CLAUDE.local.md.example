@@ -1,0 +1,4 @@
+<!-- Copy to CLAUDE.local.md (gitignored). Personal, per-machine notes only. -->
+- My local API base URL: http://localhost:<port>
+- My test account: <email> (password in my password manager, never paste it here)
+- I prefer answers in Ukrainian; code, commits and specs stay in English.

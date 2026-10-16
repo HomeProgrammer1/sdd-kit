@@ -1,0 +1,10 @@
+{
+  "name": "sdd-kit",
+  "displayName": "SDD Kit",
+  "version": "0.1.0",
+  "description": "Spec-driven delivery for any software project (web, mobile, backend): analyst, architect, implementer, reviewer, verifier and security agents orchestrated by /sdd-kit:sdd with human approval gates.",
+  "author": { "name": "HomeProgrammer1", "url": "https://github.com/HomeProgrammer1" },
+  "repository": "https://github.com/HomeProgrammer1/sdd-kit",
+  "license": "MIT",
+  "keywords": ["sdd", "spec-driven", "agents", "tdd", "workflow"]
+}
