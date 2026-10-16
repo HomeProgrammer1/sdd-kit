@@ -9,6 +9,13 @@
 - Stack profile: <web | mobile | backend | web+backend | mobile+backend>
   Load the matching `stack-*` skill(s) before planning, implementing or verifying.
 
+## Design (optional, used by `--design` and `--figma`)
+- Design system: none
+  <!-- Path to your design system's components.json, e.g. design-system/components.json (a git submodule
+       pinned to a tag). Prototypes are built only from it; see the sdd-design README. -->
+- Theme: light
+- Kit: <saas-dashboard | marketing-site | mobile-app>
+
 ## Commands
 <!-- Filled by /init-project. Every agent uses exactly these. -->
 - Install:   `<cmd>`

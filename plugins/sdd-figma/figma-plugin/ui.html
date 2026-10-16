@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SDD Kit Import</title>
+<style>
+  :root {
+    --bg: var(--figma-color-bg, #ffffff);
+    --bg2: var(--figma-color-bg-secondary, #f5f5f6);
+    --text: var(--figma-color-text, #1e1e1e);
+    --muted: var(--figma-color-text-secondary, #6b6b73);
+    --border: var(--figma-color-border, #e3e3e6);
+    --accent: var(--figma-color-bg-brand, #4338ca);
+    --on-accent: var(--figma-color-text-onbrand, #ffffff);
+    --warn: var(--figma-color-text-warning, #8a5a00);
+    --danger: var(--figma-color-text-danger, #c62828);
+    --ok: var(--figma-color-text-success, #1b7a3a);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 12px/1.45 system-ui, sans-serif;
+    display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px;
+  }
+  h1 { font-size: 13px; font-weight: 600; margin: 0; }
+  p { margin: 0; color: var(--muted); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+  .pick { display: flex; align-items: center; gap: 8px; }
+  .pick label {
+    display: inline-block; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; background: var(--bg); color: var(--text); white-space: nowrap;
+  }
+  .pick label:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  #file-name { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  textarea {
+    width: 100%; height: 72px; resize: vertical; padding: 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text); font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  button {
+    border: 0; border-radius: 6px; padding: 8px 12px; font: inherit; font-weight: 600;
+    background: var(--accent); color: var(--on-accent); cursor: pointer;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+  #log {
+    flex: 1; min-height: 120px; overflow: auto; margin: 0; padding: 8px 10px; border-radius: 6px;
+    background: var(--bg2); border: 1px solid var(--border);
+    font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word;
+  }
+  #log .warn { color: var(--warn); }
+  #log .error { color: var(--danger); }
+  #log .ok { color: var(--ok); font-weight: 600; }
+  #log .head { font-weight: 600; }
+</style>
+</head>
+<body>
+  <h1>SDD Kit Import</h1>
+  <p>Choose <code>specs/&lt;ID&gt;/figma/bundle.json</code> (made by <code>build_bundle.py</code>). Build creates or refreshes the “How it works” and “Screens” pages.</p>
+
+  <div class="pick">
+    <label>Choose bundle.json…<input id="file" type="file" accept=".json,application/json"></label>
+    <span id="file-name">No file chosen</span>
+  </div>
+  <textarea id="paste" placeholder="…or paste the contents of bundle.json here" spellcheck="false"></textarea>
+  <button id="build" disabled>Build in Figma</button>
+  <pre id="log" aria-live="polite"></pre>
+
+<script>
+  var fileText = null;
+  var fileInput = document.getElementById("file");
+  var fileName = document.getElementById("file-name");
+  var paste = document.getElementById("paste");
+  var buildBtn = document.getElementById("build");
+  var logEl = document.getElementById("log");
+
+  function line(text, cls) {
+    var div = document.createElement("div");
+    if (cls) div.className = cls;
+    div.textContent = text;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function source() { return fileText !== null ? fileText : paste.value.trim(); }
+
+  function refresh() { buildBtn.disabled = buildBtn.dataset.busy === "1" || !source(); }
+
+  function parse(text) {
+    var b = JSON.parse(text);
+    if (!b || typeof b !== "object" || Array.isArray(b)) throw new Error("not a JSON object");
+    var nd = Array.isArray(b.diagrams) ? b.diagrams.length : 0;
+    var ns = b.screens && Array.isArray(b.screens.screens) ? b.screens.screens.length : 0;
+    if (!nd && !ns) throw new Error("no diagrams and no screens; is this an sdd-kit bundle.json?");
+    return { bundle: b, diagrams: nd, screens: ns };
+  }
+
+  function describe(p) {
+    var b = p.bundle, ds = b.designSystem;
+    line((b.feature || "?") + (b.title ? " · " + b.title : ""), "head");
+    line(p.diagrams + " diagram(s), " + p.screens + " screen(s); design system: " +
+      (ds ? ds.name + (ds.version ? " " + ds.version : "") + (ds.theme ? " (" + ds.theme + ")" : "") : "none (neutral tokens)") +
+      (b.generatedAt ? "; built " + b.generatedAt : ""));
+    if (Array.isArray(b.warnings) && b.warnings.length) line(b.warnings.length + " warning(s) from build_bundle.py", "warn");
+  }
+
+  fileInput.addEventListener("change", function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      fileText = String(reader.result || "");
+      fileName.textContent = f.name;
+      logEl.textContent = "";
+      try { describe(parse(fileText)); } catch (e) { line("This file does not look right: " + e.message, "error"); }
+      refresh();
+    };
+    reader.onerror = function () { line("Could not read " + f.name, "error"); };
+    reader.readAsText(f);
+  });
+
+  paste.addEventListener("input", function () {
+    if (paste.value.trim()) { fileText = null; fileInput.value = ""; fileName.textContent = "Using pasted JSON"; }
+    else if (fileText === null) { fileName.textContent = "No file chosen"; }
+    refresh();
+  });
+
+  buildBtn.addEventListener("click", function () {
+    var parsed;
+    logEl.textContent = "";
+    try { parsed = parse(source()); } catch (e) { line("Invalid bundle: " + e.message, "error"); return; }
+    describe(parsed);
+    buildBtn.dataset.busy = "1";
+    buildBtn.textContent = "Building…";
+    refresh();
+    parent.postMessage({ pluginMessage: { type: "build", bundle: parsed.bundle } }, "*");
+  });
+
+  function finish() {
+    buildBtn.dataset.busy = "";
+    buildBtn.textContent = "Build in Figma";
+    refresh();
+  }
+
+  function counts(map) {
+    var keys = Object.keys(map || {});
+    if (!keys.length) return "none";
+    return keys.map(function (k) { return k + " ×" + map[k]; }).join(", ");
+  }
+
+  window.onmessage = function (event) {
+    var m = event.data && event.data.pluginMessage;
+    if (!m) return;
+    if (m.type === "log") line(m.text, m.level === "warn" ? "warn" : "");
+    else if (m.type === "error") { line("Failed: " + m.text, "error"); finish(); }
+    else if (m.type === "done") {
+      var r = m.report || {};
+      line("");
+      line("Done in " + r.seconds + " s", "ok");
+      line("Pages: " + (r.pages || []).join(", "));
+      line("Diagrams: " + r.diagrams + " · Screens: " + r.screens + " · Prototype links: " + r.links);
+      line("Variables: " + r.variables + (r.collection ? " in “" + r.collection + "” (" + r.variablesCreated + " new)" : "") + " · Bindings: " + r.bindings);
+      line("Font: " + r.font);
+      line("Instanced: " + counts(r.instanced));
+      line("Drawn: " + counts(r.drawn));
+      if (r.fallbacks && Object.keys(r.fallbacks).length) line("Library fallbacks (drawn instead): " + counts(r.fallbacks), "warn");
+      var w = r.warnings || [];
+      line("Warnings: " + w.length, w.length ? "warn" : "");
+      for (var i = 0; i < w.length; i++) line("  • " + w[i], "warn");
+      finish();
+    }
+  };
+</script>
+</body>
+</html>

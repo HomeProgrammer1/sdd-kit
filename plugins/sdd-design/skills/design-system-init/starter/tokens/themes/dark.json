@@ -1,0 +1,194 @@
+{
+  "$description": "Dark theme: same semantic names, different aliases.",
+  "color": {
+    "background": {
+      "$type": "color",
+      "$value": "{palette.neutral.900}"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "{palette.neutral.800}"
+    },
+    "surface-2": {
+      "$type": "color",
+      "$value": "{palette.neutral.800}"
+    },
+    "text": {
+      "$type": "color",
+      "$value": "{palette.neutral.50}"
+    },
+    "text-muted": {
+      "$type": "color",
+      "$value": "{palette.neutral.200}"
+    },
+    "border": {
+      "$type": "color",
+      "$value": "{palette.neutral.600}"
+    },
+    "primary": {
+      "$type": "color",
+      "$value": "{palette.brand.50}"
+    },
+    "on-primary": {
+      "$type": "color",
+      "$value": "{palette.brand.700}"
+    },
+    "primary-subtle": {
+      "$type": "color",
+      "$value": "{palette.brand.700}"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "{palette.red.300}"
+    },
+    "danger-subtle": {
+      "$type": "color",
+      "$value": "{palette.red.950}"
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{palette.green.300}"
+    },
+    "success-subtle": {
+      "$type": "color",
+      "$value": "{palette.green.950}"
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "{palette.amber.300}"
+    },
+    "warning-subtle": {
+      "$type": "color",
+      "$value": "{palette.amber.950}"
+    },
+    "info": {
+      "$type": "color",
+      "$value": "{palette.blue.300}"
+    },
+    "info-subtle": {
+      "$type": "color",
+      "$value": "{palette.blue.950}"
+    }
+  },
+  "space": {
+    "1": {
+      "$value": "{scale.space.1}"
+    },
+    "2": {
+      "$value": "{scale.space.2}"
+    },
+    "3": {
+      "$value": "{scale.space.3}"
+    },
+    "4": {
+      "$value": "{scale.space.4}"
+    },
+    "5": {
+      "$value": "{scale.space.5}"
+    },
+    "6": {
+      "$value": "{scale.space.6}"
+    },
+    "8": {
+      "$value": "{scale.space.8}"
+    },
+    "10": {
+      "$value": "{scale.space.10}"
+    },
+    "12": {
+      "$value": "{scale.space.12}"
+    }
+  },
+  "radius": {
+    "sm": {
+      "$value": "{scale.radius.sm}"
+    },
+    "md": {
+      "$value": "{scale.radius.md}"
+    },
+    "lg": {
+      "$value": "{scale.radius.lg}"
+    },
+    "full": {
+      "$value": "{scale.radius.full}"
+    }
+  },
+  "font": {
+    "family": {
+      "sans": {
+        "$type": "fontFamily",
+        "$value": [
+          "Inter",
+          "system-ui",
+          "sans-serif"
+        ]
+      },
+      "mono": {
+        "$type": "fontFamily",
+        "$value": [
+          "JetBrains Mono",
+          "ui-monospace",
+          "monospace"
+        ]
+      }
+    },
+    "size": {
+      "caption": {
+        "$type": "dimension",
+        "$value": 12
+      },
+      "label": {
+        "$type": "dimension",
+        "$value": 14
+      },
+      "body": {
+        "$type": "dimension",
+        "$value": 16
+      },
+      "heading": {
+        "$type": "dimension",
+        "$value": 20
+      },
+      "title": {
+        "$type": "dimension",
+        "$value": 28
+      },
+      "display": {
+        "$type": "dimension",
+        "$value": 40
+      }
+    },
+    "weight": {
+      "regular": {
+        "$type": "fontWeight",
+        "$value": 400
+      },
+      "medium": {
+        "$type": "fontWeight",
+        "$value": 500
+      },
+      "bold": {
+        "$type": "fontWeight",
+        "$value": 700
+      }
+    }
+  },
+  "diagram": {
+    "paper": {
+      "$type": "color",
+      "$value": "{palette.neutral.900}"
+    },
+    "ink": {
+      "$type": "color",
+      "$value": "{palette.neutral.50}"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "{palette.brand.50}"
+    },
+    "accentTint": {
+      "$type": "color",
+      "$value": "{palette.brand.700}"
+    }
+  }
+}

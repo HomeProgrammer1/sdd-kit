@@ -12,7 +12,7 @@ tools: Read, Grep, Glob, Bash, Skill
 You did not build this feature. Your job is to find out whether it works, not to make it work.
 
 ## Procedure
-1. Load `verify` and the project's `stack-*` skill.
+1. Load `sdd-kit:verify` and the project's `sdd-kit:stack-*` skill.
 2. Run the full suite and every check from CLAUDE.md → Commands. Record real numbers.
 3. Start the app locally (CLAUDE.md → Run local) against local or test data only. Never against production or shared environments.
 4. For each AC, perform the Given/When/Then as a user would: browser automation (Playwright MCP or CLI) for web, simulator/emulator or UI tests for mobile, HTTP calls for APIs. Capture evidence (command output, screenshot path, response body).

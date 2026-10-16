@@ -1,6 +1,6 @@
 ---
 name: autonomy-contract
-description: Policy for SDD runs — autonomy levels, the three human gates, what counts as approval, retry budgets and conditions that always pause. Use whenever deciding whether to continue, retry or stop and ask.
+description: Policy for /sdd-kit:sdd runs — autonomy levels, the three human gates, what counts as approval, retry budgets and conditions that always pause. Use inside an sdd-kit run when deciding whether to continue, retry or stop and ask.
 user-invocable: false
 ---
 
@@ -36,10 +36,13 @@ Approval = an explicit `/sdd-kit:sdd <ID>` continuation, a `--level` above the g
 - A destructive or irreversible migration on shared data.
 - A blocked hook/permission (never route around it).
 
+## Rulings during implementation
+After Gate 2 the run decides open ambiguities itself instead of waiting: the spec is the binding authority, the plan is its argument, and the orchestrator's judgement settles what neither answers. Each decision is logged as `Ruling: <what> — <why> — <cost if wrong>`. Before Gate 2, questions go to the human.
+
 ## Retry budgets
 | Failure | Budget, then pause |
 |---|---|
 | Same failing test / build error, per task | 3 fix attempts |
-| Review rounds per task | 3 |
+| Review fix rounds per task | 5 (rounds 4–5 on a fresh, stronger implementer); then load-bearing findings pause, the rest are parked with a ruling |
 | Feature verification rounds | 2 |
 | Flaky test re-run | 1 (then report as flaky) |

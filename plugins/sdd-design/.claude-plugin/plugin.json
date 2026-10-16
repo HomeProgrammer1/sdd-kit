@@ -1,0 +1,10 @@
+{
+  "name": "sdd-design",
+  "displayName": "SDD Design",
+  "version": "0.2.0",
+  "description": "Clickable prototypes from an approved spec, built only from your own design system: screens.json (one source for HTML and Figma), a ux-designer agent, AC coverage and contrast checks, and a starter for a separate design-system repository.",
+  "author": { "name": "HomeProgrammer1", "url": "https://github.com/HomeProgrammer1" },
+  "repository": "https://github.com/HomeProgrammer1/sdd-kit",
+  "license": "MIT",
+  "keywords": ["design", "prototype", "design-system", "tokens", "spec-driven", "figma"]
+}

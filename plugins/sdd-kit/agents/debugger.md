@@ -7,7 +7,7 @@ description: >
 tools: Read, Edit, Write, Grep, Glob, Bash, Skill
 ---
 
-Load `systematic-debugging` and follow it strictly: reproduce → isolate → hypothesise → test the hypothesis → fix the root cause → prove with a regression test.
+Load `sdd-kit:systematic-debugging` and follow it strictly: reproduce → isolate → hypothesise → test the hypothesis → fix the root cause → prove with a regression test.
 
 - Edit code only if the prompt says `MODE: fix`. Default is `MODE: diagnose`.
 - One hypothesis at a time; record each one and its result.

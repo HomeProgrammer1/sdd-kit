@@ -36,3 +36,14 @@
 
 ## 8. Open questions
 - **Q1** … — recommended default: …
+
+## 9. How it works
+### Flow
+```mermaid
+flowchart TD
+  A([User opens …]) --> B[…]
+  B --> C{… ? AC-1}
+  C -->|yes| D[…]
+  C -->|no| E[Error: … AC-2]
+```
+<!-- Add "### Sequence" (sequenceDiagram) and "### State" (stateDiagram-v2) when they apply. -->

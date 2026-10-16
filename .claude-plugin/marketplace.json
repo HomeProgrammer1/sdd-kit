@@ -1,17 +1,65 @@
 {
   "name": "sdd-marketplace",
-  "owner": { "name": "HomeProgrammer1" },
+  "owner": {
+    "name": "HomeProgrammer1"
+  },
   "metadata": {
-    "description": "Spec-driven development plugins for Claude Code",
-    "version": "0.1.0"
+    "description": "Spec-driven development for Claude Code: delivery workflow, feature diagrams, design-system prototypes and Figma layout",
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "sdd-kit",
       "source": "./plugins/sdd-kit",
-      "description": "Spec-driven delivery for any software project (web, mobile, backend): analyst, architect, implementer, reviewer, verifier and security agents orchestrated by /sdd-kit:sdd with human approval gates.",
+      "version": "0.2.0",
+      "description": "Spec-driven delivery for any software project (web, mobile, backend): discovery, spec with How-it-works diagrams, plan, TDD implementation with two-verdict review, verification and a draft PR, behind three human gates.",
       "category": "development",
-      "keywords": ["sdd", "spec-driven", "agents", "tdd", "workflow"]
+      "keywords": [
+        "sdd",
+        "spec-driven",
+        "agents",
+        "tdd",
+        "workflow"
+      ]
+    },
+    {
+      "name": "sdd-diagrams",
+      "source": "./plugins/sdd-diagrams",
+      "version": "0.2.0",
+      "description": "Every feature gets a How-it-works diagram: checks the Mermaid in a spec and renders editorial SVG, a multi-page draw.io file and a review gallery.",
+      "category": "development",
+      "keywords": [
+        "diagrams",
+        "mermaid",
+        "drawio",
+        "svg"
+      ]
+    },
+    {
+      "name": "sdd-design",
+      "source": "./plugins/sdd-design",
+      "version": "0.2.0",
+      "description": "Clickable prototypes from an approved spec, built only from your own design system, plus a starter for a separate design-system repository.",
+      "category": "design",
+      "keywords": [
+        "design",
+        "prototype",
+        "design-system",
+        "tokens"
+      ]
+    },
+    {
+      "name": "sdd-figma",
+      "source": "./plugins/sdd-figma",
+      "version": "0.2.0",
+      "description": "Lays out a feature's diagrams and prototype screens in Figma as auto-layout frames bound to design-system variables, through the Figma MCP connector or a bundled Figma plugin.",
+      "category": "design",
+      "keywords": [
+        "figma",
+        "design",
+        "diagrams",
+        "prototype"
+      ]
     }
   ]
 }

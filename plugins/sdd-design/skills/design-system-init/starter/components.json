@@ -1,0 +1,25 @@
+{
+  "name": "my-design-system",
+  "version": "0.1.0",
+  "tokens": ["tokens/primitives.json", "tokens/themes/light.json"],
+  "themes": {
+    "light": ["tokens/primitives.json", "tokens/themes/light.json"],
+    "dark": ["tokens/primitives.json", "tokens/themes/dark.json"]
+  },
+  "kits": {
+    "saas-dashboard": ["Sidebar", "NavBar", "Card", "Grid", "Badge", "Select", "Toggle"],
+    "marketing-site": ["NavBar", "Image", "Grid", "Card", "Button", "Link"],
+    "mobile-app": ["NavBar", "TabBar", "List", "Toggle", "Avatar"]
+  },
+  "components": {
+    "Stack": {}, "Grid": {}, "Card": {}, "Divider": {}, "Spacer": {},
+    "Text": { "variants": ["display", "title", "heading", "body", "caption", "label"] },
+    "Button": { "variants": ["primary", "secondary", "ghost", "danger"] },
+    "Link": {},
+    "TextField": {}, "Checkbox": {}, "Toggle": {}, "Select": {},
+    "Alert": { "variants": ["info", "success", "warning", "danger"] },
+    "Badge": { "variants": ["default", "primary", "danger", "success"] },
+    "Image": {}, "Avatar": {}, "List": {},
+    "NavBar": {}, "TabBar": {}, "Sidebar": {}
+  }
+}

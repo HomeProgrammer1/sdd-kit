@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Root-cause-first debugging — reproduce, isolate, one hypothesis at a time, regression test. Use the moment any failure is unexpected, before trying a fix.
+description: sdd-kit's root-cause-first debugging procedure — reproduce, isolate, one hypothesis at a time, regression test. Loaded by sdd-kit agents when something fails unexpectedly during a /sdd-kit:sdd run.
 user-invocable: false
 ---
 

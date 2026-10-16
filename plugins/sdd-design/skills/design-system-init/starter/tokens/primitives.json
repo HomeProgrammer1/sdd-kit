@@ -1,0 +1,191 @@
+{
+  "$description": "Raw palette and scales. Never referenced by product code directly; semantic tokens alias these.",
+  "palette": {
+    "neutral": {
+      "0": {
+        "$type": "color",
+        "$value": "#ffffff"
+      },
+      "50": {
+        "$type": "color",
+        "$value": "#f7f7f8"
+      },
+      "100": {
+        "$type": "color",
+        "$value": "#eeeef0"
+      },
+      "200": {
+        "$type": "color",
+        "$value": "#dcdce0"
+      },
+      "400": {
+        "$type": "color",
+        "$value": "#9a9aa5"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#5b5b66"
+      },
+      "800": {
+        "$type": "color",
+        "$value": "#2b2b33"
+      },
+      "900": {
+        "$type": "color",
+        "$value": "#18181d"
+      }
+    },
+    "brand": {
+      "50": {
+        "$type": "color",
+        "$value": "#eef2ff"
+      },
+      "500": {
+        "$type": "color",
+        "$value": "#4f46e5"
+      },
+      "600": {
+        "$type": "color",
+        "$value": "#4338ca"
+      },
+      "700": {
+        "$type": "color",
+        "$value": "#3730a3"
+      }
+    },
+    "red": {
+      "600": {
+        "$type": "color",
+        "$value": "#c62828"
+      },
+      "50": {
+        "$type": "color",
+        "$value": "#fdecec"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#f19999"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#3a1d1d"
+      }
+    },
+    "green": {
+      "700": {
+        "$type": "color",
+        "$value": "#1b7a3a"
+      },
+      "50": {
+        "$type": "color",
+        "$value": "#e8f5ec"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#7fd19b"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#15301f"
+      }
+    },
+    "amber": {
+      "800": {
+        "$type": "color",
+        "$value": "#8a5a00"
+      },
+      "50": {
+        "$type": "color",
+        "$value": "#fdf4e3"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#f0c36b"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#33270f"
+      }
+    },
+    "blue": {
+      "700": {
+        "$type": "color",
+        "$value": "#1d5fbf"
+      },
+      "50": {
+        "$type": "color",
+        "$value": "#e9f1fc"
+      },
+      "300": {
+        "$type": "color",
+        "$value": "#8ab4f0"
+      },
+      "950": {
+        "$type": "color",
+        "$value": "#172840"
+      }
+    }
+  },
+  "scale": {
+    "space": {
+      "0": {
+        "$type": "dimension",
+        "$value": 0
+      },
+      "1": {
+        "$type": "dimension",
+        "$value": 4
+      },
+      "2": {
+        "$type": "dimension",
+        "$value": 8
+      },
+      "3": {
+        "$type": "dimension",
+        "$value": 12
+      },
+      "4": {
+        "$type": "dimension",
+        "$value": 16
+      },
+      "5": {
+        "$type": "dimension",
+        "$value": 20
+      },
+      "6": {
+        "$type": "dimension",
+        "$value": 24
+      },
+      "8": {
+        "$type": "dimension",
+        "$value": 32
+      },
+      "10": {
+        "$type": "dimension",
+        "$value": 40
+      },
+      "12": {
+        "$type": "dimension",
+        "$value": 48
+      }
+    },
+    "radius": {
+      "sm": {
+        "$type": "dimension",
+        "$value": 4
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": 8
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": 16
+      },
+      "full": {
+        "$type": "dimension",
+        "$value": 999
+      }
+    }
+  }
+}

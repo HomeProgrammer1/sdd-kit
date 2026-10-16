@@ -17,6 +17,18 @@ Follows the existing email-verification flow (token table + mailer job).
 Migration adds the table; rollback drops it. No backfill.
 
 ## 4. Interfaces
+```mermaid
+erDiagram
+  USER ||--o{ PASSWORD_RESET_TOKEN : requests
+  PASSWORD_RESET_TOKEN {
+    uuid id
+    uuid user_id
+    string token_hash
+    datetime expires_at
+    datetime used_at
+  }
+```
+
 `POST /auth/password-reset {email}` → 202 always. `POST /auth/password-reset/confirm {token, password}` → 204 | 410 expired/used | 422 weak password.
 
 ## 5. Dependencies

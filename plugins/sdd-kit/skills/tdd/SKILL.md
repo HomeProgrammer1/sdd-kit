@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Test-driven development procedure — red, green, refactor, one behaviour at a time, including the bug-fix variant. Use whenever writing or changing behaviour in code.
+description: sdd-kit's test-first procedure for implementing a task from specs/<ID>/tasks.md — red, green, refactor, one behaviour at a time, plus the bug-fix variant. Loaded by sdd-kit agents during /sdd-kit:sdd runs.
 user-invocable: false
 ---
 

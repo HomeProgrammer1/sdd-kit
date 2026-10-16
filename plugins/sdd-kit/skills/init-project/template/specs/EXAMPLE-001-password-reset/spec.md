@@ -39,3 +39,51 @@ Users who forget their password open a support ticket today (about 40 tickets a 
 
 ## 8. Open questions
 - none
+
+## 9. How it works
+### Flow
+```mermaid
+flowchart TD
+  A([Forgot password: enter email]) --> C{Registered? AC-1 AC-2}
+  C -->|yes| D[Queue reset email]
+  C -->|no| E[Queue nothing]
+  D --> F[Show: If this email exists, we sent a link]
+  E --> F
+  F --> H{Link opened: valid and unused? AC-3 AC-4}
+  H -->|yes| K[Set new password, end other sessions AC-5]
+  H -->|no| J[Show: Link expired, send a new one]
+  K --> L([Logged in])
+  J -.-> A
+  class C focal
+```
+
+### Sequence
+```mermaid
+sequenceDiagram
+  actor U as User
+  participant W as Web app
+  participant A as Auth API
+  participant M as Mailer
+  U->>W: Submit email
+  W->>A: POST /auth/password-reset
+  A->>M: Send link (if registered)
+  A-->>W: 202 Accepted
+  W-->>U: Same message for every email
+  U->>W: Open link, new password
+  W->>A: POST /auth/password-reset/confirm
+  alt token valid
+    A-->>W: 204, other sessions revoked
+  else expired or used
+    A-->>W: 410 Gone
+  end
+```
+
+### State
+```mermaid
+stateDiagram-v2
+  [*] --> Issued: reset requested
+  Issued --> Used: new password saved
+  Issued --> Expired: 30 minutes passed
+  Used --> [*]
+  Expired --> [*]
+```

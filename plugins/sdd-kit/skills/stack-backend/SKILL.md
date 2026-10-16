@@ -1,6 +1,6 @@
 ---
 name: stack-backend
-description: Backend/API profile (Node, Python, Go, Java/Kotlin, .NET, Ruby; REST, GraphQL, gRPC, workers) — spec, plan, implementation and verification specifics for services. Load when CLAUDE.md Stack profile includes backend.
+description: Backend/API profile for sdd-kit runs (Node, Python, Go, Java/Kotlin, .NET, Ruby; REST, GraphQL, gRPC, workers) — spec, plan, implementation and verification specifics. Load when CLAUDE.md Stack profile includes backend.
 user-invocable: false
 ---
 

@@ -1,10 +1,35 @@
 {
   "name": "sdd-kit",
   "displayName": "SDD Kit",
-  "version": "0.1.0",
-  "description": "Spec-driven delivery for any software project (web, mobile, backend): analyst, architect, implementer, reviewer, verifier and security agents orchestrated by /sdd-kit:sdd with human approval gates.",
-  "author": { "name": "HomeProgrammer1", "url": "https://github.com/HomeProgrammer1" },
+  "version": "0.2.0",
+  "description": "Spec-driven delivery for any software project (web, mobile, backend): discovery, spec with How-it-works diagrams, plan, TDD implementation with two-verdict review, verification and a draft PR, behind three human gates. Coexists with other workflow plugins.",
+  "author": {
+    "name": "HomeProgrammer1",
+    "url": "https://github.com/HomeProgrammer1"
+  },
   "repository": "https://github.com/HomeProgrammer1/sdd-kit",
   "license": "MIT",
-  "keywords": ["sdd", "spec-driven", "agents", "tdd", "workflow"]
+  "keywords": [
+    "sdd",
+    "spec-driven",
+    "agents",
+    "tdd",
+    "workflow"
+  ],
+  "userConfig": {
+    "guard_mode": {
+      "type": "string",
+      "title": "Guard mode",
+      "description": "sdd (recommended): hard stops everywhere, merge/deploy/publish/secret rails only in /sdd-kit:sdd runs and sdd agents. strict: rails in every session. hard-only: hard stops only. off: no guard.",
+      "default": "sdd",
+      "required": false
+    },
+    "format_on_edit": {
+      "type": "boolean",
+      "title": "Format on edit",
+      "description": "During sdd-kit runs, run the project's own formatter after each edit.",
+      "default": true,
+      "required": false
+    }
+  }
 }

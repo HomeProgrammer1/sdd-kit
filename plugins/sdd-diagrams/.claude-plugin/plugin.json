@@ -1,0 +1,10 @@
+{
+  "name": "sdd-diagrams",
+  "displayName": "SDD Diagrams",
+  "version": "0.2.0",
+  "description": "Every feature gets a 'How it works' diagram: Mermaid in the spec stays the source, and this plugin checks it and renders editorial SVG, a multi-page draw.io file and a review gallery. Standard library Python, no network.",
+  "author": { "name": "HomeProgrammer1", "url": "https://github.com/HomeProgrammer1" },
+  "repository": "https://github.com/HomeProgrammer1/sdd-kit",
+  "license": "MIT",
+  "keywords": ["diagrams", "mermaid", "drawio", "svg", "spec-driven", "documentation"]
+}

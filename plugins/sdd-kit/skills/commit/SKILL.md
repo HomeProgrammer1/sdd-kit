@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Analyse the staged/unstaged diff and create one Conventional Commit for one task, referencing the task and AC IDs. Use for /sdd-kit:commit or when the orchestrator commits an approved task.
+description: Create one Conventional Commit for one sdd-kit task from the current diff, referencing the task and AC IDs. Use for /sdd-kit:commit or when the sdd-kit orchestrator commits an approved task.
 argument-hint: "[T-n]"
 allowed-tools: Bash(git status *), Bash(git diff *), Bash(git add *), Bash(git commit *), Bash(git log *)
 ---

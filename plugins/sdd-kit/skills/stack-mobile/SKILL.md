@@ -1,6 +1,6 @@
 ---
 name: stack-mobile
-description: Mobile app profile (iOS Swift/SwiftUI, Android Kotlin/Compose, Flutter, React Native/Expo) — spec, plan, implementation and verification specifics for apps. Load when CLAUDE.md Stack profile includes mobile.
+description: Mobile app profile for sdd-kit runs (iOS Swift/SwiftUI, Android Kotlin/Compose, Flutter, React Native/Expo) — spec, plan, implementation and verification specifics. Load when CLAUDE.md Stack profile includes mobile.
 user-invocable: false
 ---
 

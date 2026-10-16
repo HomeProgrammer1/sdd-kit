@@ -1,10 +1,12 @@
 ---
 name: run-state
-description: Schema and rules for specs/<ID>/state.json, the on-disk memory of an SDD run that survives session restarts and context compaction. Use whenever starting, resuming, pausing or advancing a run.
+description: Schema and rules for specs/<ID>/state.json and ledger.md, the on-disk memory of a /sdd-kit:sdd run that survives restarts and compaction. Use when starting, resuming, pausing or advancing an sdd-kit run.
 user-invocable: false
 ---
 
-Only the orchestrator writes `state.json`. Write it **before** reporting to the human and **after** every side effect (branch, commit, push, PR, tracker update), so a crash never loses or duplicates work.
+Two files hold a run's memory: `state.json` (machine state) and `ledger.md` (human-readable history: pre-flight scan, rulings, task completions, parked findings). Only the orchestrator writes them.
+
+The orchestrator writes `state.json` Write it **before** reporting to the human and **after** every side effect (branch, commit, push, PR, tracker update), so a crash never loses or duplicates work.
 
 ```json
 {
@@ -12,8 +14,12 @@ Only the orchestrator writes `state.json`. Write it **before** reporting to the 
   "slug": "password-reset",
   "profile": ["web", "backend"],
   "autonomy": "spec",
-  "phase": "intake",
+  "phase": "discovery",
+  "session": "<session id of the session running /sdd-kit:sdd>",
   "branch": "feat/F-001-password-reset",
+  "worktree": ".worktrees/F-001-password-reset",
+  "base_sha": "9f8e7d6",
+  "options": { "design": false, "figma": false },
   "approvals": { "spec": null, "plan": null },
   "tasks": { "T-1": "done", "T-2": "in-progress" },
   "retries": { "T-2:review": 1 },
@@ -26,8 +32,25 @@ Only the orchestrator writes `state.json`. Write it **before** reporting to the 
 }
 ```
 
-- `phase`: `intake → spec-review → planning → plan-review → implementing → verifying → verified → handed-over → done` (or `abandoned`).
+- `phase`: `discovery → specifying → spec-review → planning → plan-review → implementing → reviewing → verifying → verified → handed-over → done` (or `abandoned`).
 - `approvals.*`: `{ "by": "<name>", "at": "<ISO time>", "how": "/sdd-kit:sdd F-001 | message" }`.
 - `pause`: `{ "reason": "...", "needs": "what the human must do", "at": "..." }`; cleared on resume.
 - `autonomy` is set once from the user and never raised by the run.
+- `session` is overwritten with the current session id on start and on every resume; the guard hook uses it to tell an SDD session from any other. A run in `done` or `abandoned` no longer counts.
 - On resume: re-read, verify each side effect still exists (`git log`, `git branch`), then continue from `phase`.
+
+## ledger.md
+```markdown
+# Ledger — F-001
+## Pre-flight scan
+| Tasks | Produces / consumes | Finding | Ruling |
+|---|---|---|---|
+## Rulings
+- Ruling: <what> — <why> — <cost if wrong>
+## Progress
+- T-1: complete a1b2c3d
+- T-2: fix round 2 (F1, F3 open)
+## Parked findings
+- T-2/F4 [MINOR] … — Ruling: accepted, revisit in branch review
+```
+Append only. One line per event. Resume reads the last line of each task.

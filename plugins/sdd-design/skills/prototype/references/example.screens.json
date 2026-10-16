@@ -1,0 +1,333 @@
+{
+  "$schema": "sdd-screens/1",
+  "feature": "EXAMPLE-001",
+  "title": "Password reset",
+  "platform": "web",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "screens": [
+    {
+      "id": "enter-email",
+      "title": "Enter email",
+      "state": "default",
+      "ac": [
+        "AC-1",
+        "AC-2"
+      ],
+      "body": {
+        "type": "Stack",
+        "fill": "background",
+        "padding": "space.12",
+        "align": "center",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Stack",
+            "width": 420,
+            "gap": "space.6",
+            "children": [
+              {
+                "type": "Text",
+                "variant": "label",
+                "tone": "primary",
+                "text": "Acme"
+              },
+              {
+                "type": "Card",
+                "padding": "space.8",
+                "gap": "space.5",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "title",
+                    "text": "Reset your password"
+                  },
+                  {
+                    "type": "Text",
+                    "variant": "body",
+                    "tone": "muted",
+                    "text": "Enter the email you signed up with. We will send you a link."
+                  },
+                  {
+                    "type": "TextField",
+                    "label": "Email",
+                    "placeholder": "you@example.com",
+                    "inputType": "email"
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "primary",
+                    "label": "Send link",
+                    "full": true,
+                    "link": "check-inbox"
+                  },
+                  {
+                    "type": "Link",
+                    "text": "Back to sign in"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "check-inbox",
+      "title": "Check your inbox",
+      "state": "success",
+      "ac": [
+        "AC-1",
+        "AC-2"
+      ],
+      "note": "Same message whether or not the email is registered (AC-2)",
+      "body": {
+        "type": "Stack",
+        "fill": "background",
+        "padding": "space.12",
+        "align": "center",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Stack",
+            "width": 420,
+            "gap": "space.6",
+            "children": [
+              {
+                "type": "Text",
+                "variant": "label",
+                "tone": "primary",
+                "text": "Acme"
+              },
+              {
+                "type": "Card",
+                "padding": "space.8",
+                "gap": "space.5",
+                "children": [
+                  {
+                    "type": "Alert",
+                    "tone": "info",
+                    "title": "Check your inbox",
+                    "text": "If this email exists, we sent a link. It expires in 30 minutes."
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "secondary",
+                    "label": "Open link (demo)",
+                    "full": true,
+                    "link": "new-password"
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "ghost",
+                    "label": "Open an expired link (demo)",
+                    "full": true,
+                    "link": "link-expired"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "new-password",
+      "title": "Set a new password",
+      "state": "default",
+      "ac": [
+        "AC-3",
+        "AC-5"
+      ],
+      "body": {
+        "type": "Stack",
+        "fill": "background",
+        "padding": "space.12",
+        "align": "center",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Stack",
+            "width": 420,
+            "gap": "space.6",
+            "children": [
+              {
+                "type": "Text",
+                "variant": "label",
+                "tone": "primary",
+                "text": "Acme"
+              },
+              {
+                "type": "Card",
+                "padding": "space.8",
+                "gap": "space.5",
+                "children": [
+                  {
+                    "type": "Text",
+                    "variant": "title",
+                    "text": "Choose a new password"
+                  },
+                  {
+                    "type": "TextField",
+                    "label": "New password",
+                    "hint": "At least 12 characters",
+                    "inputType": "password"
+                  },
+                  {
+                    "type": "TextField",
+                    "label": "Repeat password",
+                    "inputType": "password"
+                  },
+                  {
+                    "type": "Checkbox",
+                    "label": "Sign me out on other devices",
+                    "checked": true
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "primary",
+                    "label": "Save password",
+                    "full": true,
+                    "link": "done"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "link-expired",
+      "title": "Link expired",
+      "state": "error",
+      "ac": [
+        "AC-4"
+      ],
+      "body": {
+        "type": "Stack",
+        "fill": "background",
+        "padding": "space.12",
+        "align": "center",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Stack",
+            "width": 420,
+            "gap": "space.6",
+            "children": [
+              {
+                "type": "Text",
+                "variant": "label",
+                "tone": "primary",
+                "text": "Acme"
+              },
+              {
+                "type": "Card",
+                "padding": "space.8",
+                "gap": "space.5",
+                "children": [
+                  {
+                    "type": "Alert",
+                    "tone": "danger",
+                    "title": "This link has expired",
+                    "text": "Links work once and for 30 minutes."
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "primary",
+                    "label": "Send a new link",
+                    "full": true,
+                    "link": "enter-email"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "done",
+      "title": "Signed in",
+      "state": "success",
+      "ac": [
+        "AC-5"
+      ],
+      "body": {
+        "type": "Stack",
+        "fill": "background",
+        "padding": "space.12",
+        "align": "center",
+        "width": "fill",
+        "children": [
+          {
+            "type": "Stack",
+            "width": 420,
+            "gap": "space.6",
+            "children": [
+              {
+                "type": "Text",
+                "variant": "label",
+                "tone": "primary",
+                "text": "Acme"
+              },
+              {
+                "type": "Card",
+                "padding": "space.8",
+                "gap": "space.5",
+                "children": [
+                  {
+                    "type": "Alert",
+                    "tone": "success",
+                    "title": "Password changed",
+                    "text": "You are signed in. Other sessions were signed out."
+                  },
+                  {
+                    "type": "Button",
+                    "variant": "ghost",
+                    "label": "Go to dashboard"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "flows": [
+    {
+      "from": "enter-email",
+      "to": "check-inbox",
+      "on": "Send link",
+      "ac": "AC-1"
+    },
+    {
+      "from": "check-inbox",
+      "to": "new-password",
+      "on": "Open link (demo)",
+      "ac": "AC-3"
+    },
+    {
+      "from": "check-inbox",
+      "to": "link-expired",
+      "on": "Open an expired link (demo)",
+      "ac": "AC-4"
+    },
+    {
+      "from": "new-password",
+      "to": "done",
+      "on": "Save password",
+      "ac": "AC-5"
+    },
+    {
+      "from": "link-expired",
+      "to": "enter-email",
+      "on": "Send a new link",
+      "ac": "AC-4"
+    }
+  ]
+}

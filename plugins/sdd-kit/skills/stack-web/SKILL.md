@@ -1,6 +1,6 @@
 ---
 name: stack-web
-description: Web front-end profile (React, Vue, Svelte, Angular, Next/Nuxt, plain HTML) — what to check when specifying, planning, implementing and verifying UI on the web. Load when CLAUDE.md Stack profile includes web.
+description: Web front-end profile for sdd-kit runs (React, Vue, Svelte, Angular, Next/Nuxt, plain HTML) — what to check when specifying, planning, implementing and verifying UI. Load when CLAUDE.md Stack profile includes web.
 user-invocable: false
 ---
 
